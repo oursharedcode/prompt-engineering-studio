@@ -25,26 +25,33 @@ See [REQUIREMENTS.md](./REQUIREMENTS.md) for the full requirement set.
   plain text back.
 - In-browser prompt library with colour-coded projects; template gallery of
   ready-made prompts; three themes (black / white / grey).
-- Right rail: Google AdSense unit (top) and a live world map of visitors
-  (bottom) — both optional and configured in one file.
+- Right rail: Google AdSense unit (top) and a live world map of visitors with
+  per-country counts (bottom) — both optional and configured in one file.
 
 ## Local development
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5290
 npm run build      # static site in ./dist
+npm run preview    # http://localhost:4290
 ```
+
+Ports are pinned in [`vite.config.js`](./vite.config.js) (5290 dev / 4290
+preview) rather than left on Vite's defaults, which other projects on this
+machine use. They are `strictPort`, so a clash fails loudly — a silently
+drifted port would not be in the visitor-counter Worker's CORS allowlist and
+the map would come up blank. Change a port in both places or dev breaks.
 
 ## One-file site configuration
 
 Edit [`src/config.js`](./src/config.js):
 
-| Key             | What to put there                                                                 |
-| --------------- | --------------------------------------------------------------------------------- |
-| `adsenseClient` | The AdSense publisher ID — `ca-pub-1213781225888339`                              |
-| `adsenseSlot`   | The slot ID of a vertical *Display ad* unit you create in AdSense                  |
-| `visitorMapSrc` | The `src` URL of the embed script from mapmyvisitors.com or clustrmaps.com         |
+| Key                | What to put there                                                              |
+| ------------------ | ------------------------------------------------------------------------------ |
+| `adsenseClient`    | The AdSense publisher ID — `ca-pub-1213781225888339`                           |
+| `adsenseSlot`      | The slot ID of a vertical *Display ad* unit you create in AdSense               |
+| `visitorStatsUrl`  | Base URL of the visitor-counter Worker (see *Visitor counter* below)            |
 
 Until these are filled in, the page shows neutral placeholders in both spots.
 
@@ -61,11 +68,42 @@ Until these are filled in, the page shows neutral placeholders in both spots.
 > in the root repo. Note the rail needs **both** `adsenseClient` and
 > `adsenseSlot` before it renders an ad; the slot ID comes from an ad unit
 > created in the dashboard once the site is approved.
->
-> **Visitor map note:** register the page URL
-> `https://www.oursharedcode.com/prompt-engineering-studio/` with the widget
-> provider (mapmyvisitors.com or clustrmaps.com); the free widget counts and
-> plots visitors by location on a small world map.
+
+## Visitor counter
+
+The right rail's world map is not a third-party widget — it runs on data the
+site owns. A small Cloudflare Worker
+([`deploy/visitor-stats-worker.js`](./deploy/visitor-stats-worker.js)) reads
+Cloudflare's own country header, keeps one tally per country in Workers KV, and
+serves it as JSON; the page renders it with Google Charts **GeoChart** (free,
+no API key) plus a ranked country list.
+
+```bash
+npm install -g wrangler
+wrangler login
+cd deploy
+wrangler kv namespace create VISITORS   # paste the id into wrangler.toml
+wrangler secret put VISITOR_SALT        # any long random string
+wrangler deploy
+```
+
+Then set `visitorStatsUrl` in [`src/config.js`](./src/config.js) to the
+deployed Worker URL (no trailing slash).
+
+Notes:
+
+- **No IP is ever stored.** Deduplication uses a salted SHA-256 of IP + user
+  agent + date, kept for 12 hours, so one visitor counts once per half-day.
+- **Counts are approximate.** KV has no atomic increment and throttles to one
+  write per second per key, so simultaneous first-visits collapse into one
+  count (a 10-request burst measured as +1). Visitors arriving seconds apart
+  all register; only same-second bursts are lost. Exact counts would need a
+  Durable Object — the accepted trade for staying on the free tier.
+- **Free-tier ceiling.** KV allows 1,000 writes/day; each *new* visitor costs
+  two, so the counter tops out around 500 unique visitors/day. Repeat views and
+  everyone reading the map are reads (100,000/day), not writes.
+- Allowed origins are listed at the top of the Worker — add any new host there
+  or the browser will block the request.
 
 ## Deployment
 

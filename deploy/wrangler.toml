@@ -1,0 +1,11 @@
+name = "promengi-visitor-stats"
+main = "visitor-stats-worker.js"
+compatibility_date = "2025-01-01"
+
+# Created with: wrangler kv namespace create VISITORS
+[[kv_namespaces]]
+binding = "VISITORS"
+id = "5607af6dc7224cfc9e31e1c5128441db"
+
+# VISITOR_SALT is a secret, not a var:
+#   wrangler secret put VISITOR_SALT

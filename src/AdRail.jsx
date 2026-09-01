@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { CONFIG } from "./config";
+import VisitorMap from "./VisitorMap";
 
 // ─── Right-hand rail: Google AdSense (top ~2/3) + visitor map (bottom) ───────
 // Both widgets are injected at runtime from CONFIG; with no IDs configured the
@@ -96,49 +97,6 @@ function AdSenseUnit() {
   );
 }
 
-function VisitorMap() {
-  const boxRef = useRef(null);
-
-  useEffect(() => {
-    if (!CONFIG.visitorMapSrc || !boxRef.current) return;
-    // MapMyVisitors / ClustrMaps render their canvas where the script sits
-    const s = document.createElement("script");
-    s.type = "text/javascript";
-    s.id = "mapmyvisitors";
-    s.src = CONFIG.visitorMapSrc;
-    boxRef.current.appendChild(s);
-    return () => {
-      if (boxRef.current) boxRef.current.innerHTML = "";
-    };
-  }, []);
-
-  if (!CONFIG.visitorMapSrc) {
-    return (
-      <Placeholder>
-        Visitor map
-        <br />
-        Set visitorMapSrc in src/config.js
-      </Placeholder>
-    );
-  }
-
-  return (
-    <div
-      ref={boxRef}
-      style={{
-        flex: 1,
-        margin: "4px 12px 12px",
-        minHeight: 0,
-        overflow: "hidden",
-        borderRadius: 10,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    />
-  );
-}
-
 export default function AdRail() {
   return (
     <aside style={railStyle}>
@@ -156,7 +114,7 @@ export default function AdRail() {
         }}
       >
         <div style={labelStyle}>VISITORS AROUND THE WORLD</div>
-        <VisitorMap />
+        <VisitorMap Placeholder={Placeholder} />
       </div>
     </aside>
   );

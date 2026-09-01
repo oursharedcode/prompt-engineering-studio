@@ -13,9 +13,9 @@ export const CONFIG = {
   // Create a "Display ad" unit (vertical) in AdSense → Ads → By ad unit.
   adsenseSlot: "",
 
-  // Visitor-map widget script URL from https://mapmyvisitors.com or
-  // https://clustrmaps.com (free tier). After registering the page URL, copy
-  // the `src` of the embed <script> they give you, e.g.
-  // "https://mapmyvisitors.com/map.js?d=AbCdEfGh...&cl=ffffff&w=a".
-  visitorMapSrc: "",
+  // Base URL of the visitor-counter Worker deployed from
+  // deploy/visitor-stats-worker.js, e.g.
+  // "https://promengi-visitor-stats.<subdomain>.workers.dev" (no trailing slash).
+  // It tallies visitors by country and feeds the world map in the right rail.
+  visitorStatsUrl: "https://promengi-visitor-stats.oursharedcode.workers.dev",
 };

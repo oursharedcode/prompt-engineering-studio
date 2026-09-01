@@ -80,10 +80,13 @@ content: everything the user writes stays in their browser or on their own disk.
   configured via `src/config.js` (`adsenseClient`, `adsenseSlot`) plus
   `public/ads.txt`; while unconfigured, a neutral placeholder SHALL keep the
   layout stable.
-- FR-20 Below the ad, the rail SHALL host a small world map showing visitor
-  counts by location, provided by a free third-party widget (MapMyVisitors /
-  ClustrMaps) configured via `src/config.js` (`visitorMapSrc`); while
-  unconfigured, a neutral placeholder SHALL appear.
+- FR-20 Below the ad, the rail SHALL host a small world map plus a ranked list
+  of visitor counts by country, sourced from a Cloudflare Worker
+  (`deploy/visitor-stats-worker.js`) configured via `src/config.js`
+  (`visitorStatsUrl`); while unconfigured, a neutral placeholder SHALL appear.
+- FR-20a The counter SHALL derive country from Cloudflare's request geo header,
+  SHALL count a visitor at most once per 12 hours, and SHALL NOT store IP
+  addresses — only a salted, dated hash used for that deduplication.
 - FR-21 On screens narrower than 900 px the rail SHALL drop below the studio
   instead of compressing it.
 
