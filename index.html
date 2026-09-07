@@ -12,10 +12,188 @@
       rel="icon"
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>"
     />
+    <!--
+      The prose under #root is static on purpose. React owns #root and nothing
+      else, so this survives every render, and a reader with JavaScript off — or
+      a crawler that does not execute it — still gets the whole page. It is not
+      hidden, boxed or shrunk to nothing: scroll past the studio and it is there.
+    -->
+    <style>
+      .page-notes {
+        background: #0a0e1a;
+        color: #c3cbdc;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 1rem;
+        line-height: 1.7;
+        border-top: 1px solid #252d42;
+        padding: 4rem 1.5rem 5rem;
+      }
+      .page-notes > * { max-width: 44rem; margin-left: auto; margin-right: auto; }
+      .page-notes h1 {
+        font-size: clamp(1.7rem, 5vw, 2.1rem);
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+        color: #f2f4f8;
+        margin: 0 0 1.25rem;
+      }
+      .page-notes h2 {
+        font-size: 1.15rem;
+        letter-spacing: -0.005em;
+        color: #f2f4f8;
+        margin: 2.75rem 0 0.75rem;
+      }
+      .page-notes p { margin: 0 0 1.15rem; }
+      .page-notes ul { margin: 0 0 1.15rem; padding-left: 1.15rem; }
+      .page-notes li { margin: 0 0 0.85rem; }
+      .page-notes strong { color: #eef1f6; }
+      .page-notes code {
+        font-family: ui-monospace, "IBM Plex Mono", Menlo, monospace;
+        font-size: 0.9em;
+        color: #d7c9ff;
+      }
+      .page-notes a { color: #b39dff; }
+      .page-notes footer {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #252d42;
+        font-size: 0.92rem;
+        color: #8c96ab;
+      }
+    </style>
   </head>
   <body style="margin: 0">
-    <noscript>Prompt Engineering Studio needs JavaScript to run.</noscript>
+    <noscript>
+      The studio itself needs JavaScript to run. The description of it, below,
+      does not.
+    </noscript>
     <div id="root"></div>
+
+    <section class="page-notes">
+      <h1>Prompt Engineering Studio</h1>
+
+      <p>
+        I kept rewriting the same system prompt from scratch, and I kept leaving
+        something out of it. Usually the line that lets the model say it doesn't
+        know. I would find that out later, from an answer that was wrong and
+        sounded certain. So this page treats a system prompt the way it actually
+        behaves — as a stack of labelled parts you can move around, rather than
+        one long paragraph you reread until your eyes slide off it.
+      </p>
+
+      <h2>What the studio does</h2>
+
+      <p>
+        Twelve blocks sit down the left: Role, Context, Task, Constraints, Think
+        Step-by-Step, Output Format, Few-Shot Examples, Self-Verify, Tone &amp;
+        Style, Grounding, Uncertainty, and a plain Separator. Drag one into the
+        editor and it lands as an editable row with starter text already in it.
+        Anything written in <code>[CAPITALS]</code> becomes a chip — click it,
+        type the real value, and it is substituted through that block.
+      </p>
+
+      <p>
+        You can write blocks of your own, with a label, an emoji, a colour and a
+        body, reorder them by dragging, and save the whole library to a
+        <code>blocks.json</code> file on your own disk. Finished prompts export
+        as <code>.prompt</code> JSON, a Python string literal, OpenAI or
+        Anthropic <code>messages</code> JSON, Markdown, or plain text, and load
+        back again. Undo goes back fifty steps.
+      </p>
+
+      <p>
+        Nothing is sent anywhere. There is no account and no server behind this
+        page: the prompts you keep live in your browser's local storage and in
+        files you choose yourself. There is a
+        <a href="https://www.oursharedcode.com/privacy/">privacy note</a> if you
+        want the longer version.
+      </p>
+
+      <h2>Which blocks actually change the answer</h2>
+
+      <p>
+        They do not all pull the same weight, and it took me a while to notice
+        which ones I was adding out of habit.
+      </p>
+
+      <ul>
+        <li>
+          <strong>Grounding and Uncertainty.</strong> These two do the most work
+          of the twelve. Grounding confines the model to the material you paste
+          in; Uncertainty gives it explicit permission to answer "I don't know".
+          Without that permission a model fills the gap with something plausible,
+          because filling gaps plausibly is the thing it was trained to do.
+        </li>
+        <li>
+          <strong>Output Format.</strong> Describing the shape of the answer
+          moves the model's effort off formatting and onto content. It also makes
+          the output parseable, which starts to matter the moment you stop
+          reading every answer by hand.
+        </li>
+        <li>
+          <strong>Few-Shot Examples.</strong> Two worked examples beat a
+          paragraph describing what you want. If you only have the patience to
+          write one part of the prompt properly, write the examples.
+        </li>
+        <li>
+          <strong>Task.</strong> Worth being blunt in. "Summarise this" and
+          "Summarise this in six bullets for someone who will not read the
+          document" are different instructions, and the second one is the job.
+          The <code>Do NOT</code> line at the end of that template earns its
+          place too — exclusions cut scope creep faster than more description
+          does.
+        </li>
+        <li>
+          <strong>Think Step-by-Step.</strong> Real gains on multi-step
+          reasoning, arithmetic, anything where one wrong intermediate step
+          poisons everything after it. Close to nothing on lookup and rewriting,
+          where it mostly makes the answer longer.
+        </li>
+        <li>
+          <strong>Role.</strong> The most quoted block and the weakest one. It
+          does set vocabulary and register, which is worth something. But "with
+          fifteen years of experience" does nothing measurable; it stays in the
+          template because people expect to see it there, not because the years
+          help.
+        </li>
+      </ul>
+
+      <h2>About the health score</h2>
+
+      <p>
+        The panel scores a prompt out of 100: Role 20, Task 20, Constraints 15,
+        Grounding 15, Uncertainty 10, Output Format 10, and 10 for filling in
+        your placeholders, less two for each one still sitting there as a chip.
+        The hallucination badge reads the same blocks from the other side — it
+        watches for grounding, for constraints, and for the permission to be
+        unsure.
+      </p>
+
+      <p>
+        It is a checklist with a number on it, and nothing more than that. A
+        prompt can score 100 while saying nothing specific, and a sharp four-line
+        prompt can score 45. Use it to catch what you forgot, not to decide when
+        you are finished.
+      </p>
+
+      <h2>What it does not do</h2>
+
+      <p>
+        It does not run anything. There is no model behind this page, no API key
+        to paste in, no usage bill and no queue. You assemble a prompt here and
+        paste it into whatever you already use. Once the page has loaded it goes
+        on working offline, which is a side effect of there being nothing on the
+        other end rather than a feature I built.
+      </p>
+
+      <footer>
+        <a href="https://www.oursharedcode.com/">OurSharedCode</a> &middot;
+        <a href="https://www.oursharedcode.com/privacy/">Privacy</a> &middot;
+        <a href="https://github.com/oursharedcode/prompt-engineering-studio"
+          >Source on GitHub</a
+        >
+      </footer>
+    </section>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
