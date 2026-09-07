@@ -18,48 +18,7 @@
       a crawler that does not execute it — still gets the whole page. It is not
       hidden, boxed or shrunk to nothing: scroll past the studio and it is there.
     -->
-    <style>
-      .page-notes {
-        background: #0a0e1a;
-        color: #c3cbdc;
-        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-        font-size: 1rem;
-        line-height: 1.7;
-        border-top: 1px solid #252d42;
-        padding: 4rem 1.5rem 5rem;
-      }
-      .page-notes > * { max-width: 44rem; margin-left: auto; margin-right: auto; }
-      .page-notes h1 {
-        font-size: clamp(1.7rem, 5vw, 2.1rem);
-        line-height: 1.2;
-        letter-spacing: -0.02em;
-        color: #f2f4f8;
-        margin: 0 0 1.25rem;
-      }
-      .page-notes h2 {
-        font-size: 1.15rem;
-        letter-spacing: -0.005em;
-        color: #f2f4f8;
-        margin: 2.75rem 0 0.75rem;
-      }
-      .page-notes p { margin: 0 0 1.15rem; }
-      .page-notes ul { margin: 0 0 1.15rem; padding-left: 1.15rem; }
-      .page-notes li { margin: 0 0 0.85rem; }
-      .page-notes strong { color: #eef1f6; }
-      .page-notes code {
-        font-family: ui-monospace, "IBM Plex Mono", Menlo, monospace;
-        font-size: 0.9em;
-        color: #d7c9ff;
-      }
-      .page-notes a { color: #b39dff; }
-      .page-notes footer {
-        margin-top: 3rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid #252d42;
-        font-size: 0.92rem;
-        color: #8c96ab;
-      }
-    </style>
+    <link rel="stylesheet" href="./src/page-notes.css" />
   </head>
   <body style="margin: 0">
     <noscript>
@@ -185,7 +144,19 @@
         other end rather than a feature I built.
       </p>
 
+      <h2>Written guides</h2>
+
+      <p>
+        Most of what I learned building this ended up in six longer pieces about
+        writing system prompts — why instructions get ignored, how to stop a
+        model inventing facts, choosing few-shot examples, when chain-of-thought
+        is worth paying for, output formats a program can parse, and one
+        complete annotated prompt you can take. They are collected under
+        <a href="./guides/">guides</a>.
+      </p>
+
       <footer>
+        <a href="./guides/">Guides</a> &middot;
         <a href="https://www.oursharedcode.com/">OurSharedCode</a> &middot;
         <a href="https://www.oursharedcode.com/privacy/">Privacy</a> &middot;
         <a href="https://github.com/oursharedcode/prompt-engineering-studio"

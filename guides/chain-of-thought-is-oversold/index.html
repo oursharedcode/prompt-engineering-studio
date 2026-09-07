@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chain-of-thought is oversold</title>
+    <meta
+      name="description"
+      content="Think step by step earns its place on some tasks and is pure cost on others. Where the gains are real, where they are imaginary, what the printed reasoning is and isn't, and why reasoning models change the calculation."
+    />
+    <link rel="canonical" href="https://www.oursharedcode.com/prompt-engineering-studio/guides/chain-of-thought-is-oversold/" />
+    <link rel="stylesheet" href="../guide.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>"
+    />
+  </head>
+  <body>
+    <p class="crumb">
+      <a href="https://www.oursharedcode.com/">OurSharedCode</a> &rsaquo;
+      <a href="../../">Prompt Engineering Studio</a> &rsaquo;
+      <a href="../">Guides</a>
+    </p>
+
+    <h1>Chain-of-thought is oversold</h1>
+    <p class="byline">By Mark &middot; 7 September 2026</p>
+
+    <p>
+      For about three months I put <em>think step by step</em> in everything. It
+      is one line, it is free to type, and the received wisdom says it makes
+      models smarter. Then I sat down with a rewriting task and compared fifty
+      outputs with the line and fifty without, and the difference was: the
+      answers got longer, the calls got slower, and the quality was the same.
+    </p>
+
+    <p>
+      Chain-of-thought is a real technique with real gains. It is also the most
+      over-applied idea in prompting, mine included, and the reason is that it
+      never looks like it is doing harm. A prompt with a reasoning step produces
+      output that reads as more considered whether or not it is.
+    </p>
+
+    <h2>Where it genuinely pays</h2>
+
+    <p>
+      The pattern is narrower than "hard tasks". Reasoning steps help where
+      <strong>an early mistake would otherwise be invisible and would poison
+      everything after it</strong>. Concretely:
+    </p>
+
+    <ul>
+      <li>
+        <strong>Arithmetic and unit work.</strong> Anything where a middle
+        quantity is computed and then reused.
+      </li>
+      <li>
+        <strong>Constraint satisfaction.</strong> Scheduling, allocation, "pick
+        the option that satisfies all five of these" — the model has to hold
+        candidates and eliminate them, and doing that in the open works better
+        than doing it in one leap.
+      </li>
+      <li>
+        <strong>Multi-hop questions.</strong> Where the answer requires joining
+        two facts that are not adjacent in the source.
+      </li>
+      <li>
+        <strong>Genuinely borderline classification.</strong> Not routine
+        labelling — the cases where a human would want to talk it through.
+      </li>
+      <li>
+        <strong>Anything you will need to audit.</strong> Sometimes the steps
+        are the deliverable, because a reviewer has to see why. That is a
+        legitimate reason to ask for reasoning even when accuracy does not move.
+      </li>
+    </ul>
+
+    <h2>Where it does nothing except cost you</h2>
+
+    <p>
+      Extraction. Lookup. Translation. Reformatting. Summarising. Rewriting for
+      tone. Simple classification with clear categories. In all of these the
+      answer is not the product of a chain — there is no intermediate result to
+      get wrong — and asking for steps mostly buys you a preamble to strip out.
+    </p>
+
+    <p>
+      Two costs that are easy to miss when the technique is free to type. You
+      pay for the reasoning tokens on every single call, forever, in latency as
+      much as money. And the reasoning arrives mixed in with the answer, so
+      whatever parses your output now has prose in front of it — which is a
+      parsing problem you created, and I have
+      <a href="../output-formats-a-program-can-parse/">written about how those
+      end</a>.
+    </p>
+
+    <p>
+      If you want reasoning without the mess, put a wall between the two parts
+      and throw the first one away:
+    </p>
+
+    <pre><code>Work through the problem inside &lt;thinking&gt; tags.
+Then give your final answer inside &lt;answer&gt; tags.
+Everything outside &lt;answer&gt; will be discarded, so put nothing
+there that the user needs.</code></pre>
+
+    <h2>What the printed steps actually are</h2>
+
+    <p>
+      Here is the part that gets skipped, and it changes how much you should
+      trust the technique.
+    </p>
+
+    <p>
+      The visible reasoning is generated text. It is not a transcript of a
+      computation that happened somewhere else, and it is not guaranteed to be
+      the reason the model produced the answer it produced. Models can and do
+      write plausible steps that lead to an answer they were going to give
+      anyway — this has been studied under the heading of faithfulness, and the
+      finding is not comfortable: a chain of reasoning can look sound while the
+      answer was driven by something the chain never mentions.
+    </p>
+
+    <p>
+      So: use chain-of-thought to <em>improve</em> answers, which it does. Do
+      not use it as an <em>audit trail</em> and treat a convincing explanation
+      as evidence the answer is right. Those are different claims, and only the
+      first one is well supported.
+    </p>
+
+    <p>
+      The same caution applies to self-verification. Asking a model to check its
+      own output catches formatting slips, arithmetic, and instructions it
+      plainly missed. It is much weaker on factual errors, because the check
+      runs on the same knowledge that produced the mistake — the blind spot is
+      in both passes. A second call with fresh framing, or a check against a
+      source, catches things a self-review will not.
+    </p>
+
+    <h2>Reasoning models change the sum</h2>
+
+    <p>
+      This section has a shelf life, so take it as of late 2026. Models that do
+      extended reasoning natively already work through problems before
+      answering. Bolting <em>think step by step</em> onto one of those is
+      usually redundant, and prescribing a rigid procedure can make things
+      worse — you are constraining a process that was doing better unconstrained.
+    </p>
+
+    <p>
+      What still helps with those models is telling them what to think
+      <em>about</em>: which constraints are hard, which trade-off you care about,
+      what a wrong answer would cost. That is not the same as scripting the
+      steps, and it is the part worth keeping.
+    </p>
+
+    <p>
+      The practical consequence is that a prompt tuned on last year's model may
+      be carrying a reasoning instruction that is now dead weight. Worth
+      checking when you switch models, along with everything else in the prompt.
+    </p>
+
+    <h2>How to decide, in twenty minutes</h2>
+
+    <p>
+      Do not reason about whether reasoning helps. Measure it. Take twenty real
+      inputs — twenty, not three — and run them with and without the line.
+      Compare on the thing you actually care about, not on which output reads
+      better, because the reasoning version will always read better.
+    </p>
+
+    <p>
+      If it wins, keep it and pay for it happily. If it draws, delete it and
+      take the speed. That is a twenty-minute experiment which most prompts
+      never get, and it is why so many production prompts are carrying a step
+      that was cargo-culted in 2023 and never questioned since.
+    </p>
+
+    <p>
+      I keep the Think Step-by-Step block in the studio for the tasks that earn
+      it, and I leave it out more often than I put it in.
+    </p>
+
+    <footer>
+      <p>
+        The <a href="../../">Prompt Engineering Studio</a> scores a prompt on
+        several blocks. Chain-of-thought is deliberately not one of them —
+        scoring it would encourage exactly the reflex this article is arguing
+        against.
+      </p>
+      <p>
+        Next:
+        <a href="../output-formats-a-program-can-parse/">writing output formats
+        a program can parse</a> &middot; <a href="../">All guides</a> &middot;
+        <a href="https://www.oursharedcode.com/">OurSharedCode</a>
+      </p>
+    </footer>
+  </body>
+</html>

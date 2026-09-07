@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prompt engineering guides</title>
+    <meta
+      name="description"
+      content="Six written guides on system prompts: why instructions get ignored, grounding against invented facts, choosing few-shot examples, when chain-of-thought is worth its cost, output formats a program can parse, and one complete annotated prompt."
+    />
+    <link rel="canonical" href="https://www.oursharedcode.com/prompt-engineering-studio/guides/" />
+    <link rel="stylesheet" href="./guide.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>"
+    />
+  </head>
+  <body>
+    <p class="crumb">
+      <a href="https://www.oursharedcode.com/">OurSharedCode</a> &rsaquo;
+      <a href="../">Prompt Engineering Studio</a>
+    </p>
+
+    <h1>Guides</h1>
+    <p class="byline">Written by Mark &middot; six pieces, September 2026</p>
+
+    <p>
+      These are the things I worked out while building the
+      <a href="../">Prompt Engineering Studio</a> and using it on real work.
+      They are about system prompts specifically — the instructions you write
+      once and then live with — rather than about chatting with a model.
+    </p>
+
+    <p>
+      Each one is a technique I use, an honest account of where it stops
+      working, and the prompt text before and after. Where I think a popular idea
+      is oversold I say so, and where I have contradicted myself between two of
+      these pages I have left the contradiction visible and explained it.
+    </p>
+
+    <div class="entry">
+      <h2>
+        <a href="./why-your-system-prompt-gets-ignored/"
+          >Why your system prompt gets ignored</a
+        >
+      </h2>
+      <p>
+        Six causes that account for nearly all of it: contradictions you wrote on
+        different days, instructions buried in the quiet middle of a long prompt,
+        negations, vague quantifiers, examples that overrule the prose, and rule
+        lists nobody could follow. Ends with the order I debug in.
+      </p>
+    </div>
+
+    <div class="entry">
+      <h2>
+        <a href="./grounding-stop-a-model-inventing-facts/"
+          >Grounding: how to stop a model inventing facts</a
+        >
+      </h2>
+      <p>
+        "Use only the information provided" is the right idea and leaks in four
+        places. Delimiting the source, giving refusal a defined form, splitting
+        the half of the task that cannot be grounded, and requiring quotes so
+        the output can be checked by a machine rather than trusted.
+      </p>
+    </div>
+
+    <div class="entry">
+      <h2>
+        <a href="./few-shot-examples-that-work/">Few-shot examples that work</a>
+      </h2>
+      <p>
+        How many to use, why to choose the awkward cases over the typical ones,
+        and the accidental patterns — length, subject, label balance, order —
+        that your examples teach without your noticing. Two tests that catch it.
+      </p>
+    </div>
+
+    <div class="entry">
+      <h2>
+        <a href="./chain-of-thought-is-oversold/">Chain-of-thought is oversold</a>
+      </h2>
+      <p>
+        Where "think step by step" genuinely pays, where it only adds latency and
+        a parsing problem, what the printed reasoning is and is not evidence of,
+        and why reasoning models change the calculation. Includes the
+        twenty-minute experiment that settles it for your task.
+      </p>
+    </div>
+
+    <div class="entry">
+      <h2>
+        <a href="./output-formats-a-program-can-parse/"
+          >Writing output formats a program can parse</a
+        >
+      </h2>
+      <p>
+        Getting JSON out of a model is easy; getting the same JSON on the
+        two-hundredth call is a different job. Literal schemas, defined empty
+        values, giving the urge to explain somewhere to go — and the five things
+        the parser has to do because no prompt gets you to a hundred per cent.
+      </p>
+    </div>
+
+    <div class="entry">
+      <h2>
+        <a href="./a-system-prompt-you-can-steal/">A system prompt you can steal</a>
+      </h2>
+      <p>
+        One complete working prompt for support-ticket triage, built a block at a
+        time with the reason for every line — including the four techniques left
+        out on purpose, which is the part most worth copying.
+      </p>
+    </div>
+
+    <footer>
+      <p>
+        <a href="../">Prompt Engineering Studio</a> &middot;
+        <a href="https://www.oursharedcode.com/">OurSharedCode</a> &middot;
+        <a href="https://www.oursharedcode.com/privacy/">Privacy</a>
+      </p>
+    </footer>
+  </body>
+</html>

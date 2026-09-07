@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Writing output formats a program can parse</title>
+    <meta
+      name="description"
+      content="Getting JSON out of a model is easy. Getting the same JSON every time, for a year, is a different job — missing fields, code fences, invented enum values, and the parser that only fails at 3am. What to put in the prompt and what to handle in code."
+    />
+    <link rel="canonical" href="https://www.oursharedcode.com/prompt-engineering-studio/guides/output-formats-a-program-can-parse/" />
+    <link rel="stylesheet" href="../guide.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>"
+    />
+  </head>
+  <body>
+    <p class="crumb">
+      <a href="https://www.oursharedcode.com/">OurSharedCode</a> &rsaquo;
+      <a href="../../">Prompt Engineering Studio</a> &rsaquo;
+      <a href="../">Guides</a>
+    </p>
+
+    <h1>Writing output formats a program can parse</h1>
+    <p class="byline">By Mark &middot; 7 September 2026</p>
+
+    <p>
+      The job ran nightly for six weeks and then failed at ten past three in the
+      morning. The model had wrapped its JSON in a markdown code fence — three
+      backticks, the word <code>json</code>, the object, three backticks — which
+      it had not done once in six weeks and did that night. Nothing had changed
+      on my side.
+    </p>
+
+    <p>
+      That is the shape of this whole problem. Getting structured output from a
+      model is easy and you will believe you have solved it. Getting the
+      <em>same</em> structure on the two-hundredth call, or after a model
+      upgrade, is a different piece of work, and it is half prompt and half code.
+      Anyone who tells you it is only prompt has not run one of these for a year.
+    </p>
+
+    <h2>Use the API's structured output if it has one</h2>
+
+    <p>
+      Before any prompt technique: most providers now offer a JSON or
+      schema-constrained mode that enforces the shape at generation time rather
+      than asking nicely. If yours does, use it. It removes the fence problem,
+      the preamble problem and the trailing-comma problem in one move, and every
+      trick below is a fallback for when you cannot.
+    </p>
+
+    <p>
+      What it does not do — worth being clear, because people over-trust it — is
+      make the <em>values</em> right. A response can satisfy your schema
+      perfectly and still be wrong about every field in it. Structure and truth
+      are separate problems and only one of them is being solved for you.
+    </p>
+
+    <h2>Show the schema, do not describe it</h2>
+
+    <p>
+      A literal example of the output beats a paragraph describing the fields,
+      every time, for the same reason
+      <a href="../few-shot-examples-that-work/">examples beat instructions
+      generally</a>.
+    </p>
+
+    <pre><code>Weak:
+Return JSON with a category, an urgency level, a boolean for
+whether a human is needed, and optionally a note.
+
+Better:
+Reply with exactly this JSON and nothing else:
+
+{
+  "category": "billing" | "account" | "technical" | "other",
+  "urgency": "low" | "normal" | "high",
+  "needs_human": true | false,
+  "note": "one sentence, or null"
+}</code></pre>
+
+    <p>
+      The alternatives written out as literals matter more than they look. "An
+      urgency level" invites <code>urgent</code>, <code>High</code>,
+      <code>P1</code>, <code>medium-high</code> — all reasonable, none of them in
+      your enum. Spell the permitted values, and say what to do when none fits,
+      or the model will invent a value rather than pick the wrong one.
+    </p>
+
+    <h2>Define what "nothing here" looks like</h2>
+
+    <p>
+      The single most common structural failure I see is a field that vanishes.
+      The model had nothing to put in <code>note</code>, and rather than write
+      something untrue it left the key out, and your code did
+      <code>result["note"]</code> and threw.
+    </p>
+
+    <p>
+      Every optional field needs an explicit empty value and an instruction to
+      use it:
+    </p>
+
+    <pre><code>Every key above must be present in every response. When a value
+is unknown or does not apply, use null — never omit the key, and
+never invent a value to fill the space.</code></pre>
+
+    <p>
+      Same for lists. "Return the action items" produces <code>[]</code> from
+      some models and the key missing from others when there are none. Say
+      it: an empty list is <code>[]</code>.
+    </p>
+
+    <h2>Give the urge to explain somewhere to go</h2>
+
+    <p>
+      Models want to introduce their output. "Here is the JSON you requested:"
+      is not disobedience, it is helpfulness leaking into a channel where it
+      breaks things. Forbidding it works better when you also provide an outlet:
+    </p>
+
+    <pre><code>Output the JSON object only. No preamble, no explanation, no
+markdown fences. If you need to say something about the answer,
+put it in the "note" field — that is what it is for.</code></pre>
+
+    <p>
+      This is the positive-framing point from
+      <a href="../why-your-system-prompt-gets-ignored/">the first guide</a>
+      applied to formatting. "Do not explain" fights a tendency; "put the
+      explanation here" redirects it, and redirecting wins.
+    </p>
+
+    <h2>Keep it flat</h2>
+
+    <p>
+      Deeply nested output degrades faster than flat output. Three levels of
+      objects inside arrays inside objects, and you start seeing a bracket
+      closed in the wrong place — rare, but rare is a nightly job failing every
+      few weeks.
+    </p>
+
+    <p>
+      Flatten where you can. <code>customer_name</code> and
+      <code>customer_id</code> as top-level keys are duller than a nested
+      <code>customer</code> object and they survive better. If you genuinely need
+      hierarchy, consider two calls: extract flat, assemble in code. Your code is
+      much better at building nested structures than a language model is, and it
+      does it the same way every time.
+    </p>
+
+    <h2>The code half</h2>
+
+    <p>
+      No prompt gets you to a hundred per cent, so the parser has to expect
+      failure. Mine, in order:
+    </p>
+
+    <ol>
+      <li>
+        <strong>Strip fences before parsing.</strong> Look for a fenced block and
+        take its contents; otherwise take the substring from the first
+        <code>{</code> to the last <code>}</code>. Two lines, and they retire the
+        3am failure permanently.
+      </li>
+      <li>
+        <strong>Validate against a schema, not just JSON-parse.</strong> Valid
+        JSON with a missing key or an out-of-enum value is exactly the input that
+        gets deep into your system before breaking.
+      </li>
+      <li>
+        <strong>Retry once, with the error.</strong> Send back what you got and
+        the validation message: "that was not valid — <em>&lt;error&gt;</em> —
+        return only the corrected JSON." A large share of failures fix
+        themselves on that pass.
+      </li>
+      <li>
+        <strong>Log the raw text on failure.</strong> Not the exception, the
+        response. You cannot diagnose a format failure you did not keep, and it
+        will not reproduce.
+      </li>
+      <li>
+        <strong>Cap the retries and have a defined giving-up path.</strong> A
+        retry loop with no ceiling turns a bad response into a bill.
+      </li>
+    </ol>
+
+    <h2>Measure it, and measure it again on upgrade</h2>
+
+    <p>
+      Run fifty real inputs and count how many parse and validate first time.
+      Fifty, because a failure that happens twice in a hundred calls will not
+      show up in five and will absolutely show up in production.
+    </p>
+
+    <p>
+      Then keep those fifty. A model upgrade is a formatting change — a new
+      version can be better at your task and differently shaped in its output,
+      and the release notes will not mention the thing that breaks you. The fifty
+      inputs you already have are the cheapest regression test you will ever
+      write.
+    </p>
+
+    <footer>
+      <p>
+        The <a href="../../">Prompt Engineering Studio</a> has an Output Format
+        block for exactly this, and the studio's own export formats — JSON, a
+        Python string, messages arrays — exist so that the prompt itself lands in
+        your codebase in a shape you can diff.
+      </p>
+      <p>
+        Next:
+        <a href="../a-system-prompt-you-can-steal/">a system prompt you can
+        steal</a> &middot; <a href="../">All guides</a> &middot;
+        <a href="https://www.oursharedcode.com/">OurSharedCode</a>
+      </p>
+    </footer>
+  </body>
+</html>

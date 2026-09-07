@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Why your system prompt gets ignored</title>
+    <meta
+      name="description"
+      content="Instructions in a system prompt are rarely ignored at random. Six causes that account for nearly all of it — contradictions, position, negations, vague quantifiers, examples that override the rules, and lists nobody could follow — with the prompt text before and after."
+    />
+    <link rel="canonical" href="https://www.oursharedcode.com/prompt-engineering-studio/guides/why-your-system-prompt-gets-ignored/" />
+    <link rel="stylesheet" href="../guide.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>"
+    />
+  </head>
+  <body>
+    <p class="crumb">
+      <a href="https://www.oursharedcode.com/">OurSharedCode</a> &rsaquo;
+      <a href="../../">Prompt Engineering Studio</a> &rsaquo;
+      <a href="../">Guides</a>
+    </p>
+
+    <h1>Why your system prompt gets ignored</h1>
+    <p class="byline">By Mark &middot; 7 September 2026</p>
+
+    <p>
+      I had a system prompt with this line in it:
+    </p>
+
+    <pre><code>Never exceed 150 words.</code></pre>
+
+    <p>
+      It worked most of the time. Roughly one answer in three came back at four
+      hundred words, cheerfully ignoring a limit written in plain English, and I
+      spent an embarrassing week assuming this was the model being unreliable.
+      It wasn't. Four lines further up I had also written <em>explain your
+      reasoning in full</em>, and the two instructions could not both be
+      obeyed. The model picked one each time and I had no way of predicting
+      which.
+    </p>
+
+    <p>
+      That is most of what I want to say here. Instructions are rarely ignored
+      at random. They are ignored for reasons you can find, and after chasing a
+      few hundred of them I keep meeting the same six.
+    </p>
+
+    <h2>1. Two instructions that cannot both be true</h2>
+
+    <p>
+      This is the big one, and it is almost always invisible to the person who
+      wrote the prompt, because they wrote the two halves on different days.
+    </p>
+
+    <p class="label">The prompt that misbehaved</p>
+    <pre><code>You are a technical support assistant.
+Explain your reasoning in full so the user can follow it.
+Be thorough — a partial answer is worse than no answer.
+
+...
+
+Never exceed 150 words.</code></pre>
+
+    <p>
+      Nothing here is wrong on its own. Together they are a contradiction, and a
+      model resolving a contradiction does not raise an error — it silently
+      picks a side. The fix is not better phrasing. The fix is deciding which
+      instruction wins, which is work the author had quietly skipped.
+    </p>
+
+    <p class="label">The prompt that behaved</p>
+    <pre><code>Answer in at most 150 words.
+If the full reasoning does not fit, give the conclusion and the
+single strongest reason for it, then say that you have compressed
+the explanation and offer to expand it.</code></pre>
+
+    <p>
+      Same two goals, one of them explicitly subordinate, plus a defined
+      behaviour for the case where they collide. Most contradictions in prompts
+      exist because the author had two hopes and wrote them both down.
+    </p>
+
+    <p>
+      Before you debug anything else, read your own prompt looking specifically
+      for the opposite of the instruction being ignored. In my experience that
+      search ends the investigation about half the time.
+    </p>
+
+    <h2>2. The middle of a long prompt is the quietest part of it</h2>
+
+    <p>
+      Attention across a long input is not flat. Material at the very beginning
+      and the very end of a context is used more reliably than material buried
+      in the middle — this has been measured repeatedly, across model families,
+      and it is stable enough to plan around. A constraint sitting in the middle
+      of a 2,000-word prompt, with a long document pasted after it, is competing
+      from the weakest position on the page.
+    </p>
+
+    <p>
+      So put the constraint you care most about last, immediately before the
+      model starts generating. If you are pasting a long source document, the
+      order that works is: role and framing, then the document, then the task
+      and the hard constraints. Not the other way round. The instruction should
+      be the last thing the model reads.
+    </p>
+
+    <div class="aside">
+      <p>
+        A cheap test: take the line that is being ignored, cut it, paste it as
+        the final line of the prompt, and change nothing else. If compliance
+        jumps, position was your problem and you have just fixed it for free.
+      </p>
+    </div>
+
+    <h2>3. Negations, and where they actually work</h2>
+
+    <p>
+      "Don't write in bullet points" asks the model to hold an idea and then
+      suppress it. Positive framing is more dependable, because it gives
+      something to do rather than something to avoid:
+    </p>
+
+    <pre><code>Weak:   Do not use bullet points or headings.
+Better: Write in continuous prose, in full paragraphs.</code></pre>
+
+    <p>
+      I want to be careful here, because elsewhere on this site I say that the
+      <code>Do NOT</code> line at the end of a Task block earns its place, and I
+      still think it does. The two claims only look contradictory. What matters
+      is <em>what</em> you are negating.
+    </p>
+
+    <p>
+      Negating <strong>scope</strong> works well. "Do not cover pricing" names a
+      topic that either appears in the answer or doesn't. It is binary, it is
+      checkable at a glance, and it genuinely does cut scope creep faster than
+      any amount of describing what you do want.
+    </p>
+
+    <p>
+      Negating <strong>style</strong> works badly. "Don't be verbose", "avoid
+      repetition", "don't be too formal" all point at a spectrum with no edge on
+      it. The model has no way to know where your line is, so it guesses, and it
+      guesses differently each time. Every style negation should be rewritten as
+      a positive instruction with a measurement in it — which is the next
+      problem.
+    </p>
+
+    <h2>4. "Brief" does not mean anything</h2>
+
+    <p>
+      Brief. Detailed. A few examples. Keep it short. Concise but complete. None
+      of these carry a value, so each one is filled in by the model, differently
+      every run. Whenever you catch yourself writing one, put a number there
+      instead.
+    </p>
+
+    <pre><code>Vague:  Give a brief summary with a few key points.
+Better: Give a summary of four bullets, one sentence each.</code></pre>
+
+    <p>
+      Countable structure is more reliable than word counts. "Four bullets, one
+      sentence each" lands close to what you asked for almost every time; "about
+      eighty words" is a rough target and nothing more, because models genuinely
+      cannot count their own output well. A 150-word cap will produce answers
+      between roughly 120 and 200 words.
+    </p>
+
+    <p>
+      That last point is worth internalising rather than fighting. If a length
+      limit is a real limit — a database column, an SMS, a UI that breaks — the
+      prompt is the wrong place to enforce it. Ask for the length you want,
+      then truncate or reject in your own code. A prompt is a strong preference,
+      never a guarantee.
+    </p>
+
+    <h2>5. Your examples quietly overrule your instructions</h2>
+
+    <p>
+      If a prompt contains few-shot examples, they beat the prose around them.
+      Instructions describe; examples demonstrate; demonstration wins. Tell the
+      model to answer in a single paragraph, then show it two examples that run
+      to three paragraphs each, and you will get three paragraphs — the
+      instruction was not ignored so much as outvoted.
+    </p>
+
+    <p>
+      Which is extremely useful once you know it. The fastest fix for a stubborn
+      formatting problem is usually not another line of instruction. It is one
+      example that already has the property you want.
+    </p>
+
+    <p>
+      Examples leak content as well as form, and this catches people out. Two
+      examples both drawn from e-commerce will tilt answers towards e-commerce
+      even on unrelated questions. If your examples share an accidental feature
+      — all short, all positive in tone, all about the same industry — the model
+      will read that feature as part of the pattern, because you gave it no way
+      to tell which similarities were meant.
+    </p>
+
+    <h2>6. Forty rules is not a prompt, it is a wish list</h2>
+
+    <p>
+      Compliance decays as a constraint list grows. I don't have a threshold to
+      offer you, and anyone who quotes one precisely is guessing, but the shape
+      is real: with eight constraints most prompts hold, and by thirty the model
+      is satisfying some and dropping others without telling you. Every rule
+      spends attention that the other rules needed.
+    </p>
+
+    <p>
+      The test I apply to each line: <em>if the answer came back violating this,
+      would I actually notice or care?</em> Most long prompts are half aspiration
+      — rules written in case they help, never checked, never missed. Cutting
+      those makes the remaining ones work better, which feels like it shouldn't
+      be true and reliably is.
+    </p>
+
+    <p>
+      Grouping helps too. Nine bullets under one <code>Constraints:</code>
+      heading read as one instruction with nine parts. The same nine scattered
+      through four paragraphs read as nine competing demands, and they compete.
+    </p>
+
+    <h2>The order I debug in</h2>
+
+    <p>
+      When something is being ignored, this is the sequence I actually work
+      through, cheapest first:
+    </p>
+
+    <ol>
+      <li>
+        Search the prompt for the opposite instruction. It is there more often
+        than not.
+      </li>
+      <li>
+        Move the ignored line to the very end and retest, changing nothing
+        else.
+      </li>
+      <li>
+        Rewrite it as a positive instruction with a number in it.
+      </li>
+      <li>
+        Check the examples aren't demonstrating the opposite of what the prose
+        asks for.
+      </li>
+      <li>
+        Delete the constraints you would never actually check, and retest what
+        is left.
+      </li>
+      <li>
+        Only now consider that the task might be beyond the model, or that you
+        need a smaller task and two calls.
+      </li>
+    </ol>
+
+    <p>
+      Steps one through five cost minutes and fix most cases. Step six is where
+      people start, which is why prompt engineering has a reputation for being
+      superstition — if you jump to swapping models and adding emphasis without
+      checking for a contradiction first, then yes, it will feel like weather.
+    </p>
+
+    <footer>
+      <p>
+        The <a href="../../">Prompt Engineering Studio</a> lays a system prompt
+        out as labelled blocks, which makes contradictions between them
+        considerably harder to miss. It is free, runs in your browser, and sends
+        nothing anywhere.
+      </p>
+      <p>
+        <a href="../">All guides</a> &middot;
+        <a href="https://www.oursharedcode.com/">OurSharedCode</a> &middot;
+        <a href="https://www.oursharedcode.com/privacy/">Privacy</a>
+      </p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,134 @@
+/* Shared look for the written guides.
+   Deliberately the root site's palette (oursharedcode.com/index.html), not the
+   studio's dark chrome: these are reading pages and they belong visually with
+   the rest of the domain, not with the app they sit under. Both schemes are
+   defined here because the root site honours prefers-color-scheme and a reader
+   moving between the two should not get flashed. */
+
+:root {
+  color-scheme: light dark;
+  --ink: #1e2430;
+  --muted: #5a6270;
+  --bg: #fdfcfa;
+  --card: #fff;
+  --rule: #e6e2da;
+  --link: #0a5ea6;
+  --code-bg: #f2efe9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e8e6e1;
+    --muted: #a4a9b3;
+    --bg: #15171c;
+    --card: #1e2128;
+    --rule: #2e323b;
+    --link: #7ab6f0;
+    --code-bg: #22252d;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+  line-height: 1.7;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+}
+
+a { color: var(--link); }
+
+.crumb {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0 0 2.5rem;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 5vw, 2.3rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.75rem;
+}
+
+.byline {
+  font-size: 0.92rem;
+  color: var(--muted);
+  margin: 0 0 2.5rem;
+}
+
+h2 {
+  font-size: 1.25rem;
+  letter-spacing: -0.008em;
+  line-height: 1.3;
+  margin: 3rem 0 0.85rem;
+}
+
+p { margin: 0 0 1.25rem; }
+ul, ol { margin: 0 0 1.25rem; padding-left: 1.3rem; }
+li { margin: 0 0 0.6rem; }
+
+/* Prompt text is the point of most of these pages, so it gets a block of its
+   own rather than being quoted inline where line breaks would be lost. */
+pre {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--link);
+  border-radius: 0.4rem;
+  padding: 1rem 1.1rem;
+  margin: 0 0 1.5rem;
+  overflow-x: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  background: var(--code-bg);
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
+}
+
+pre code { background: none; padding: 0; font-size: 1em; }
+
+.label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  margin: 0 0 0.4rem;
+}
+
+.aside {
+  border-left: 3px solid var(--rule);
+  padding: 0.25rem 0 0.25rem 1.1rem;
+  margin: 0 0 1.5rem;
+  color: var(--muted);
+}
+
+.aside p:last-child { margin-bottom: 0; }
+
+footer {
+  margin-top: 3.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+/* The guides index only. Kept here rather than in an inline <style> on that
+   page for the reason recorded in src/page-notes.css. */
+
+.entry { margin: 0 0 2.25rem; }
+.entry h2 { margin: 0 0 0.4rem; font-size: 1.15rem; }
+.entry h2 a { text-decoration: none; }
+.entry h2 a:hover { text-decoration: underline; }
+.entry p { margin: 0; color: var(--muted); }

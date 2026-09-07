@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>A system prompt you can steal</title>
+    <meta
+      name="description"
+      content="One complete working system prompt, built a block at a time, with the reasoning for every line — including the four techniques deliberately left out and why. Copy it, adapt it, delete the parts your task does not need."
+    />
+    <link rel="canonical" href="https://www.oursharedcode.com/prompt-engineering-studio/guides/a-system-prompt-you-can-steal/" />
+    <link rel="stylesheet" href="../guide.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>"
+    />
+  </head>
+  <body>
+    <p class="crumb">
+      <a href="https://www.oursharedcode.com/">OurSharedCode</a> &rsaquo;
+      <a href="../../">Prompt Engineering Studio</a> &rsaquo;
+      <a href="../">Guides</a>
+    </p>
+
+    <h1>A system prompt you can steal</h1>
+    <p class="byline">By Mark &middot; 7 September 2026</p>
+
+    <p>
+      The other five guides here are arguments. This one is a finished object:
+      one complete system prompt, built a block at a time, with the reason for
+      every line. The task is turning a support ticket thread into structured
+      triage — common enough to be useful, specific enough that the choices are
+      real ones rather than illustrations.
+    </p>
+
+    <p>
+      Take it, change the nouns, delete what your task does not need. The
+      deleting is the important part and I will come back to it at the end.
+    </p>
+
+    <h2>Role — two lines, no CV</h2>
+
+    <pre><code>You are a support triage assistant for a B2B software company.
+You are precise and you do not speculate.</code></pre>
+
+    <p>
+      That is the whole role block. No "expert with fifteen years of
+      experience", because the years do nothing and I would rather not have a
+      line in my prompt that I cannot defend. What the second sentence buys is
+      real, though: it sets a disposition that the constraints later will lean
+      on, so when I tell the model not to guess it is consistent with who I said
+      it was rather than a surprise.
+    </p>
+
+    <h2>Context — what the model cannot see</h2>
+
+    <pre><code>Tickets arrive from a web form and from email, so formatting is
+inconsistent and quoted reply chains are common. The reader of
+your output is a duty engineer clearing a queue at speed. They
+will act on your urgency field without reading the full thread,
+so a wrong "high" costs them time and a wrong "low" costs the
+customer.</code></pre>
+
+    <p>
+      Context is where people write background nobody uses. The test for whether
+      a context line earns its place: does it change what a correct answer looks
+      like? "Quoted reply chains are common" tells the model that repeated text
+      is not two complaints. The sentence about the duty engineer explains the
+      cost of each kind of error, and error costs are the thing that makes a
+      borderline judgement decidable.
+    </p>
+
+    <h2>The source, fenced off</h2>
+
+    <pre><code>&lt;ticket&gt;
+{{ full thread, newest message last }}
+&lt;/ticket&gt;</code></pre>
+
+    <p>
+      Delimited and named, so every instruction afterwards can refer to it — for
+      all the reasons in
+      <a href="../grounding-stop-a-model-inventing-facts/">the grounding
+      guide</a>. Note <code>newest message last</code>: if the ordering matters
+      to the reading, say what the ordering is rather than leaving the model to
+      infer it from timestamps that may not be there.
+    </p>
+
+    <h2>Task — one action, one scope, one exclusion</h2>
+
+    <pre><code>Classify the ticket inside &lt;ticket&gt; and extract the fields
+below. Base every field only on what the ticket says.
+
+Do not draft a reply to the customer. Do not suggest fixes.</code></pre>
+
+    <p>
+      The exclusions are there because I watched this prompt do both of those
+      things unasked, and helpfully. This is scope negation rather than style
+      negation — "do not draft a reply" names an output that either appears or
+      does not — which is the kind that works.
+    </p>
+
+    <h2>Constraints — five, not twenty</h2>
+
+    <pre><code>- Judge urgency by business impact stated in the ticket, not by
+  how the customer sounds. Anger is not urgency.
+- "high" requires either a stated outage, a stated deadline
+  inside 24 hours, or blocked payment.
+- If the thread contains several problems, use the one the most
+  recent message is about.
+- Use only the ticket. Do not use knowledge of this company's
+  products.
+- If a field cannot be determined from the ticket, use null.</code></pre>
+
+    <p>
+      Every one of these exists because it was wrong once. The anger line is the
+      one I would keep if I could keep only one: without it, urgency tracks tone,
+      and the politest customer with the broken payment flow waits behind
+      somebody's capital letters.
+    </p>
+
+    <p>
+      The definition of <code>high</code> is deliberately mechanical. "Use your
+      judgement about urgency" produces a different judgement every run;
+      three named conditions produce the same answer twice, which is what makes
+      the field worth having at all.
+    </p>
+
+    <h2>Output format — literal, with the empties defined</h2>
+
+    <pre><code>Reply with exactly this JSON and nothing else. No preamble, no
+markdown fences.
+
+{
+  "category": "billing" | "account" | "technical" | "other",
+  "urgency": "low" | "normal" | "high",
+  "blocked_payment": true | false,
+  "customer_deadline": "ISO date, or null",
+  "one_line_summary": "max 20 words, factual, no adjectives",
+  "quote": "the sentence that decided urgency, verbatim",
+  "note": "anything you want to add, or null"
+}
+
+Every key must appear in every response. When a value is unknown,
+use null — do not omit the key.</code></pre>
+
+    <p>
+      Two fields there are not data, they are instruments.
+      <code>quote</code> makes the urgency decision checkable — I can test in
+      code that the quoted sentence appears in the ticket, and if it does not I
+      have caught a fabrication automatically. <code>note</code> is a drain for
+      the model's urge to explain itself, so the explanation does not end up in
+      front of the JSON where it breaks the parser.
+    </p>
+
+    <h2>Uncertainty — the permission that makes the rest work</h2>
+
+    <pre><code>If the ticket is too unclear to classify, set category to "other",
+urgency to "normal", and say why in "note". That is a correct
+outcome, not a failure — a wrong confident label is worse than an
+admitted unclear one.</code></pre>
+
+    <p>
+      A defined, blessed way out. Without it the model must produce a label for
+      an unlabellable ticket, and it will, and you will never know which of your
+      labels were guesses.
+    </p>
+
+    <h2>What I left out, on purpose</h2>
+
+    <ul>
+      <li>
+        <strong>Think step by step.</strong> This is extraction with a small
+        rule set, not a chain where an early error compounds. It would add
+        latency to every ticket and buy nothing —
+        <a href="../chain-of-thought-is-oversold/">the argument in full</a>.
+      </li>
+      <li>
+        <strong>Self-verification.</strong> The <code>quote</code> field already
+        gives me an external check that costs nothing. A model reviewing its own
+        classification would agree with itself.
+      </li>
+      <li>
+        <strong>Few-shot examples.</strong> Genuinely borderline. I would add two
+        — one clearly high, one deceptively angry but low — the moment the
+        urgency field starts drifting, and I would put them last, formatted in
+        the same <code>&lt;ticket&gt;</code> tags as the real input. I have not
+        added them here because the prompt works without them and every example
+        is paid for on every call.
+      </li>
+      <li>
+        <strong>Tone and style.</strong> The output is JSON. There is no register
+        to set.
+      </li>
+    </ul>
+
+    <p>
+      That list is the part of this article I would most like you to copy. A
+      prompt is not improved by containing every technique; it is improved by
+      containing the ones its task needs and none of the others.
+    </p>
+
+    <h2>What it scores, and why that is not the point</h2>
+
+    <p>
+      Pasted into <a href="../../">the studio</a>, this prompt scores in the
+      nineties rather than 100 — the placeholders are still placeholders until
+      you fill in your own company and fields. Fill them and it reaches 100.
+    </p>
+
+    <p>
+      It is worth being blunt about what that number is. It says the prompt has
+      a role, a task, constraints, grounding, an uncertainty path and a defined
+      format. It cannot tell you that "anger is not urgency" is the line holding
+      the whole thing together, and it would have scored the same before I
+      learned to write it. The score catches omissions. Judgement is still
+      yours.
+    </p>
+
+    <h2>Adapting it</h2>
+
+    <p>
+      Keep the skeleton and change four things: the role's two sentences, the
+      context paragraph about who reads the output and what each error costs, the
+      constraints that encode your rules, and the JSON. That is the prompt.
+    </p>
+
+    <p>
+      Then do the thing that separates a prompt that works from a prompt that
+      worked once: collect twenty real inputs, run them, and look at every
+      output. Each disagreement you find becomes a new constraint line or a new
+      example. Prompts are not written, they are accumulated, and this one is
+      thirty or so of those disagreements with the arguments stripped out.
+    </p>
+
+    <footer>
+      <p>
+        Build your own version in the
+        <a href="../../">Prompt Engineering Studio</a> — the blocks in this
+        article map one to one onto the blocks in the sidebar. It is free, runs
+        entirely in your browser, and keeps nothing.
+      </p>
+      <p>
+        <a href="../">All guides</a> &middot;
+        <a href="https://www.oursharedcode.com/">OurSharedCode</a> &middot;
+        <a href="https://www.oursharedcode.com/privacy/">Privacy</a>
+      </p>
+    </footer>
+  </body>
+</html>

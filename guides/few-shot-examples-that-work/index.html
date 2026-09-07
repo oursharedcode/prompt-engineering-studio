@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Few-shot examples that work</title>
+    <meta
+      name="description"
+      content="Two good examples beat six mediocre ones and beat any amount of describing what you want. How many to use, how to choose them, the accidental patterns they teach without your noticing, and the one test that catches it."
+    />
+    <link rel="canonical" href="https://www.oursharedcode.com/prompt-engineering-studio/guides/few-shot-examples-that-work/" />
+    <link rel="stylesheet" href="../guide.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>"
+    />
+  </head>
+  <body>
+    <p class="crumb">
+      <a href="https://www.oursharedcode.com/">OurSharedCode</a> &rsaquo;
+      <a href="../../">Prompt Engineering Studio</a> &rsaquo;
+      <a href="../">Guides</a>
+    </p>
+
+    <h1>Few-shot examples that work</h1>
+    <p class="byline">By Mark &middot; 7 September 2026</p>
+
+    <p>
+      I once deleted about two hundred words of instructions from a prompt and
+      replaced them with two examples. The output got better immediately, which
+      was satisfying, and it stayed subtly wrong for a fortnight before I worked
+      out why: both my examples happened to be short. Every answer I got back
+      was short, including the ones that needed not to be. I had not written
+      that rule anywhere. I had demonstrated it twice, which turned out to be
+      stronger.
+    </p>
+
+    <p>
+      That is the thing to hold on to about few-shot prompting. Examples do not
+      illustrate your instructions — they compete with them, and they usually
+      win. Everything below follows from that.
+    </p>
+
+    <h2>How many</h2>
+
+    <p>
+      For teaching a <em>format</em>, two is usually enough and three is
+      comfortable. Format is a shallow pattern and models pick it up almost
+      immediately; the fourth example of the same JSON shape teaches nothing the
+      first three did not.
+    </p>
+
+    <p>
+      For teaching a <em>judgement</em> — which of eight categories this belongs
+      in, where your line is between "urgent" and "normal" — more helps, because
+      you are not showing a shape, you are showing a boundary. That needs
+      examples on both sides of it.
+    </p>
+
+    <p>
+      Every example is in every call, so a long example set is a permanent tax
+      on latency and cost. That is the real ceiling, and it is why I stop adding
+      examples the moment a new one stops changing the output. Add one, run your
+      test set, keep it only if it earned its place.
+    </p>
+
+    <h2>Choose for the boundary, not the average</h2>
+
+    <p>
+      The instinct is to pick clean, typical, representative cases. It is the
+      wrong instinct. Typical cases are the ones the model already handles; you
+      are spending your budget on the part of the task that was never in doubt.
+    </p>
+
+    <p>
+      Pick the awkward ones. The ticket that mentions two problems and only one
+      of them matters. The review that is sarcastic. The invoice with the date in
+      the wrong format. The case that made you stop and think about which answer
+      was right — if you had to think, so will the model, and that is exactly
+      where a demonstration pays.
+    </p>
+
+    <p>
+      One caveat, learned the hard way: if every example is a hard edge case, the
+      model concludes the task is generally hairy and starts finding
+      complications in simple inputs. A mix, weighted towards the awkward, beats
+      either extreme.
+    </p>
+
+    <h2>The patterns you teach without meaning to</h2>
+
+    <p>
+      This is the part that actually bites, and my short-answers fortnight was
+      only the most obvious version. A model has no way to know which properties
+      of your examples were the point and which were incidental. Every property
+      they share is a candidate rule.
+    </p>
+
+    <ul>
+      <li>
+        <strong>Length.</strong> Three short examples teach brevity more firmly
+        than any word count you write in prose.
+      </li>
+      <li>
+        <strong>Subject matter.</strong> Two examples both about e-commerce pull
+        unrelated answers towards e-commerce vocabulary and e-commerce framing.
+      </li>
+      <li>
+        <strong>Label balance.</strong> In a classification prompt, if four of
+        your five examples are labelled <code>approved</code>, expect
+        <code>approved</code> to come back more than it should. Balance the
+        labels even when your real data is unbalanced.
+      </li>
+      <li>
+        <strong>Order.</strong> The last example is the one nearest the model's
+        turn and it carries more weight than the first. If your final example is
+        the unusual one, unusual starts looking normal.
+      </li>
+      <li>
+        <strong>Tone.</strong> Examples written in a hurry read as terse. That
+        terseness transfers.
+      </li>
+    </ul>
+
+    <p>
+      None of these are model defects. They are the mechanism working exactly as
+      advertised on input that had more patterns in it than you intended.
+    </p>
+
+    <h2>Format your examples like your real input</h2>
+
+    <p>
+      If the live input arrives wrapped in <code>&lt;ticket&gt;</code> tags, wrap
+      the examples in <code>&lt;ticket&gt;</code> tags. If the real thing has a
+      subject line, give the examples subject lines. Any difference between the
+      shape of your examples and the shape of the real input is a difference the
+      model has to bridge, and it will bridge it in whichever direction it
+      happens to guess.
+    </p>
+
+    <pre><code>&lt;ticket&gt;
+Subject: card declined twice
+I tried paying this morning and it bounced, then again at lunch.
+The bank says there is nothing wrong at their end.
+&lt;/ticket&gt;
+&lt;output&gt;
+{"category": "billing", "urgency": "high", "needs_human": true}
+&lt;/output&gt;
+
+&lt;ticket&gt;
+Subject: how do I change my avatar
+Hi — can't find where to upload a new profile picture. No rush.
+&lt;/ticket&gt;
+&lt;output&gt;
+{"category": "account", "urgency": "low", "needs_human": false}
+&lt;/output&gt;</code></pre>
+
+    <p>
+      Note that those two disagree on every field. That is not decoration — it is
+      the point. Two examples that both come back
+      <code>billing / high / true</code> teach the shape of the JSON and nothing
+      about how to decide.
+    </p>
+
+    <h2>Where examples hurt</h2>
+
+    <p>
+      When a task genuinely requires reasoning, showing only inputs and finished
+      answers teaches the model to jump. It has seen two problems solved in one
+      move, so it makes one move, and on the third problem the move is wrong.
+    </p>
+
+    <p>
+      Either include the reasoning inside the example — show the working, then
+      the answer, in the shape you want it — or leave examples out of that part
+      of the prompt entirely and let the model reason. Which of those is right
+      depends on whether the task really needs steps, and I have written about
+      that in
+      <a href="../chain-of-thought-is-oversold/">chain-of-thought is
+      oversold</a>.
+    </p>
+
+    <p>
+      Examples also go stale in a way prose does not. An example containing a
+      product name, a price, a status code or a category you later renamed will
+      keep teaching the old world long after you updated the documentation.
+      Examples are code. They belong under review and they need an owner.
+    </p>
+
+    <h2>Two tests</h2>
+
+    <p>
+      <strong>Swap the order and rerun.</strong> If reordering your examples
+      moves the output much, the model is leaning on their arrangement rather
+      than their content, and you are over-fitted to an accident. Rebalance them.
+    </p>
+
+    <p>
+      <strong>Feed an example back as live input.</strong> Take example two,
+      remove it from the prompt, and send it in as the real thing. You should
+      get back approximately what you wrote as its output. If you do not, your
+      examples are not internally consistent with each other — one of them is
+      teaching a rule the other one breaks, and that is worth finding before it
+      shows up as flakiness in production.
+    </p>
+
+    <footer>
+      <p>
+        The <a href="../../">Prompt Engineering Studio</a> keeps Few-Shot
+        Examples as its own block so the set stays together and visible, instead
+        of drifting into the middle of a paragraph where nobody maintains it.
+      </p>
+      <p>
+        Next:
+        <a href="../chain-of-thought-is-oversold/">chain-of-thought is
+        oversold</a> &middot; <a href="../">All guides</a> &middot;
+        <a href="https://www.oursharedcode.com/">OurSharedCode</a>
+      </p>
+    </footer>
+  </body>
+</html>

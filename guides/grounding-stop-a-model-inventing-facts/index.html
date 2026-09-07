@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Grounding: how to stop a model inventing facts</title>
+    <meta
+      name="description"
+      content="Telling a model to use only the source you gave it is the right idea and rarely enough on its own. Why grounding leaks — undelimited sources, no escape hatch, half-grounded tasks — and the prompt that plugs each hole."
+    />
+    <link rel="canonical" href="https://www.oursharedcode.com/prompt-engineering-studio/guides/grounding-stop-a-model-inventing-facts/" />
+    <link rel="stylesheet" href="../guide.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>"
+    />
+  </head>
+  <body>
+    <p class="crumb">
+      <a href="https://www.oursharedcode.com/">OurSharedCode</a> &rsaquo;
+      <a href="../../">Prompt Engineering Studio</a> &rsaquo;
+      <a href="../">Guides</a>
+    </p>
+
+    <h1>Grounding: how to stop a model inventing facts</h1>
+    <p class="byline">By Mark &middot; 7 September 2026</p>
+
+    <p>
+      A model once handed me a summary of a contract that cited clause 14.3.
+      Clause 14.3 did not exist. The document stopped at clause 11, and
+      everything around the citation was accurate — which is what made it
+      dangerous. A wrong answer that looks wrong gets caught. A wrong answer
+      shaped exactly like a right one goes into the report.
+    </p>
+
+    <p>
+      Grounding is the standard fix: restrict the model to material you supply
+      and forbid it from drawing on anything else. The idea is right. The one-line
+      version of it that everyone writes first is not enough, and it took me
+      several of these near-misses to work out why.
+    </p>
+
+    <p class="label">What almost everyone writes</p>
+    <pre><code>Use ONLY the information provided below. Do not use outside
+knowledge.</code></pre>
+
+    <p>
+      Four things leak through that. Here they are in the order they cost me
+      the most.
+    </p>
+
+    <h2>1. The model cannot tell where your source ends</h2>
+
+    <p>
+      "Below" is doing a lot of work in that sentence. If you paste a document
+      straight after your instructions, the boundary between <em>your words</em>
+      and <em>the source</em> is a blank line, which is not much of a wall. Ask
+      a question at the end and now there is text on both sides with nothing
+      marking which is which.
+    </p>
+
+    <p>
+      Delimit the source explicitly and then refer to it by that name for the
+      rest of the prompt:
+    </p>
+
+    <pre><code>&lt;source&gt;
+{{ the document, pasted verbatim }}
+&lt;/source&gt;
+
+Answer using only the text inside &lt;source&gt;. Anything not stated
+there does not exist for the purposes of this task.</code></pre>
+
+    <p>
+      Tags, fences, rows of dashes — the specific marker matters much less than
+      having one and using its name afterwards. "Only the text inside
+      <code>&lt;source&gt;</code>" is a checkable instruction in a way that
+      "the information provided below" is not.
+    </p>
+
+    <p>
+      This also blunts the obvious injection: a document that contains the
+      sentence "ignore previous instructions" is now inside a region you have
+      described as data. That is a mitigation and not a fix — if the source is
+      hostile you need more than a prompt — but an undelimited paste has no
+      defence at all.
+    </p>
+
+    <h2>2. You forbade outside knowledge and still demanded an answer</h2>
+
+    <p>
+      This is the same failure I wrote about in
+      <a href="../why-your-system-prompt-gets-ignored/">why your system prompt
+      gets ignored</a>, wearing different clothes. "Use only the source" plus
+      "answer the user's question" is a contradiction the moment the source
+      does not contain the answer. Something has to give, and what gives is the
+      first instruction, because the second one is the visible job.
+    </p>
+
+    <p>
+      Grounding needs an escape hatch or it is just a suggestion:
+    </p>
+
+    <pre><code>If &lt;source&gt; does not contain the answer, reply exactly:
+NOT IN SOURCE
+Do not guess, and do not fill the gap from general knowledge.
+Answering "NOT IN SOURCE" is a correct and expected outcome, not
+a failure.</code></pre>
+
+    <p>
+      The last sentence is not padding. Without something like it, refusing
+      still reads as under-performing, and a model that has been asked to be
+      helpful will reach for the plausible answer. Give it a defined, blessed
+      way out and the rate of invented clause numbers drops sharply.
+    </p>
+
+    <p>
+      Use a fixed literal string rather than free prose for the refusal. "Say
+      you don't know" produces twelve different phrasings, none of which your
+      code can match on. <code>NOT IN SOURCE</code> is one string you can test
+      for.
+    </p>
+
+    <h2>3. Half your task cannot be grounded and you didn't say which half</h2>
+
+    <p>
+      "Summarise this incident report and recommend next steps" is two jobs. The
+      summary should come entirely from the source. The recommendations cannot —
+      that is the model's judgement, by definition. Ask for both under one
+      grounding instruction and you have told the model to do something
+      impossible, so it quietly relaxes the rule for the whole answer, including
+      the part where you needed it.
+    </p>
+
+    <p>
+      Separate them and label them:
+    </p>
+
+    <pre><code>Produce two sections.
+
+FROM THE SOURCE — only facts stated in &lt;source&gt;. No inference.
+
+MY READING — your own assessment. Mark it clearly as
+interpretation. It may go beyond the source; it may not
+contradict it.</code></pre>
+
+    <p>
+      Now the reader can see which half is which, and so can the model. This
+      one change fixed more of my hallucination problems than any amount of
+      sterner wording, because most of my prompts had this shape and I hadn't
+      noticed.
+    </p>
+
+    <h2>4. Paraphrase drifts, and you can't see it drifting</h2>
+
+    <p>
+      Even confined to a source, a model restates things, and each restatement
+      is a chance for a number to shift or a hedge to disappear. "Costs rose in
+      several regions" becomes "costs rose sharply across the business" — no
+      invention exactly, just a summary walking away from the text.
+    </p>
+
+    <p>
+      Make it show its working:
+    </p>
+
+    <pre><code>For each claim you make, quote the sentence from &lt;source&gt; it
+comes from, verbatim and in quotation marks. If you cannot quote
+a sentence that supports a claim, delete the claim.</code></pre>
+
+    <p>
+      This costs output length and it is worth it. Quotes are checkable by
+      eye in seconds, and checkable in code with a substring test — if the quoted
+      sentence does not literally appear in the source, you have caught the
+      failure automatically. That is the single strongest thing in this article:
+      it converts trust into a test.
+    </p>
+
+    <h2>Putting it together</h2>
+
+    <pre><code>You are a careful analyst. Accuracy matters more than
+completeness here.
+
+&lt;source&gt;
+{{ document }}
+&lt;/source&gt;
+
+Answer the user's question using only the text inside &lt;source&gt;.
+
+- Quote the sentence supporting each claim, verbatim.
+- If a claim cannot be quoted, delete it.
+- If &lt;source&gt; does not answer the question, reply exactly:
+  NOT IN SOURCE
+- Answering NOT IN SOURCE is a correct outcome, not a failure.
+- Do not use general knowledge, even where you are confident
+  it is right.</code></pre>
+
+    <h2>What grounding does not do</h2>
+
+    <p>
+      It does not make your source true. A model faithfully summarising an
+      out-of-date policy produces a confident, well-cited wrong answer, and
+      every technique above will have worked perfectly.
+    </p>
+
+    <p>
+      It does not fix retrieval. If your pipeline fetched the wrong three
+      paragraphs, grounding restricts the model to the wrong three paragraphs.
+      Most "hallucinations" I have investigated in retrieval systems were the
+      retrieval step failing quietly and the model dutifully working with what
+      it got.
+    </p>
+
+    <p>
+      It does not survive a leading question. Ask "why did the Q3 migration
+      fail?" against a source that never says it failed, and the premise is
+      smuggled in past your instructions. Where it matters, ask the model to
+      check the premise before answering it.
+    </p>
+
+    <p>
+      And it does not make invention impossible. Nothing does. It moves the
+      rate, and it gives you a shape of output you can verify. If a false
+      statement in your product is expensive, the check belongs in your code —
+      the quote test above, a second call that verifies claims against the
+      source, a human on the sample — not in a sentence in a prompt.
+    </p>
+
+    <h2>The test I would run first</h2>
+
+    <p>
+      Take your source, and ask a question you know it does not answer. Something
+      adjacent and plausible — a date that isn't there, a name never mentioned.
+    </p>
+
+    <p>
+      If you get an answer, your grounding does not work, and no amount of
+      reading the prompt will have told you that. Do this before you ship, do it
+      again after every prompt edit, and keep the failing question as a test
+      case. It takes two minutes and it is the whole game.
+    </p>
+
+    <footer>
+      <p>
+        The <a href="../../">Prompt Engineering Studio</a> has Grounding and
+        Uncertainty as separate blocks, which is deliberate: this article is
+        largely an argument that they only work as a pair.
+      </p>
+      <p>
+        Next: <a href="../few-shot-examples-that-work/">few-shot examples that
+        work</a> &middot; <a href="../">All guides</a> &middot;
+        <a href="https://www.oursharedcode.com/">OurSharedCode</a>
+      </p>
+    </footer>
+  </body>
+</html>
