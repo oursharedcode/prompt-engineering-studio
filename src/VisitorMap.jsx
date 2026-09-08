@@ -104,6 +104,11 @@ function GeoChart({ countries }) {
   return <div ref={hostRef} style={{ width: "100%", height: "100%" }} />;
 }
 
+// Below this many total visits the rail shows the shaded map and a plain label
+// instead of the tally. A page that advertises "11 visitors" is making the case
+// against itself; counting continues regardless, so nothing is lost by waiting.
+const REVEAL_AT = 250;
+
 export default function VisitorMap({ Placeholder }) {
   const [stats, setStats] = useState(null);
   const [failed, setFailed] = useState(false);
@@ -144,6 +149,7 @@ export default function VisitorMap({ Placeholder }) {
   if (!stats) return <Placeholder>Loading visitors…</Placeholder>;
 
   const top = stats.countries.slice(0, 6);
+  const revealed = stats.total >= REVEAL_AT;
 
   return (
     <div
@@ -172,39 +178,47 @@ export default function VisitorMap({ Placeholder }) {
           paddingTop: 6,
         }}
       >
-        <span>{stats.total.toLocaleString()} VISITORS</span>
-        <span>{stats.countries.length} COUNTRIES</span>
+        {revealed ? (
+          <>
+            <span>{stats.total.toLocaleString()} VISITORS</span>
+            <span>{stats.countries.length} COUNTRIES</span>
+          </>
+        ) : (
+          <span>VISITORS BY COUNTRY</span>
+        )}
       </div>
 
-      <div style={{ flexShrink: 0, overflowY: "auto", maxHeight: 108 }}>
-        {top.map((c) => (
-          <div
-            key={c.code}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 11,
-              color: "#9CA3AF",
-              padding: "2px 0",
-            }}
-          >
-            <span style={{ width: 18 }}>{flag(c.code)}</span>
-            <span
+      {revealed && (
+        <div style={{ flexShrink: 0, overflowY: "auto", maxHeight: 108 }}>
+          {top.map((c) => (
+            <div
+              key={c.code}
               style={{
-                flex: 1,
-                minWidth: 0,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 11,
+                color: "#9CA3AF",
+                padding: "2px 0",
               }}
             >
-              {countryName(c.code)}
-            </span>
-            <span style={{ color: "#A78BFA" }}>{c.count.toLocaleString()}</span>
-          </div>
-        ))}
-      </div>
+              <span style={{ width: 18 }}>{flag(c.code)}</span>
+              <span
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {countryName(c.code)}
+              </span>
+              <span style={{ color: "#A78BFA" }}>{c.count.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
