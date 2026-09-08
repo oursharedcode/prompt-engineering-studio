@@ -6,7 +6,9 @@
 export const CONFIG = {
   // Google AdSense publisher ID, e.g. "ca-pub-1234567890123456".
   // Get it at https://adsense.google.com after your site is approved.
-  // Also update public/ads.txt with the same ID (without the "ca-" prefix).
+  // ads.txt is NOT in this repo: Google reads it only from the domain root, so
+  // it lives in oursharedcode.github.io and already carries this ID.
+  // Both this and adsenseSlot must be set before any ad renders.
   adsenseClient: "",
 
   // AdSense ad-unit slot ID for the vertical ad, e.g. "1234567890".

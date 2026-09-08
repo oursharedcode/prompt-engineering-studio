@@ -77,9 +77,10 @@ content: everything the user writes stays in their browser or on their own disk.
 - FR-18 The studio SHALL occupy the left two thirds of the page; the right
   third SHALL be a vertical rail.
 - FR-19 The top of the rail SHALL host a Google AdSense display unit,
-  configured via `src/config.js` (`adsenseClient`, `adsenseSlot`) plus
-  `public/ads.txt`; while unconfigured, a neutral placeholder SHALL keep the
-  layout stable.
+  configured via `src/config.js` (`adsenseClient`, `adsenseSlot`); while
+  unconfigured, a neutral placeholder SHALL keep the layout stable. `ads.txt`
+  is NOT part of this repository — Google reads it only from the domain root,
+  so it lives in `oursharedcode.github.io`.
 - FR-20 Below the ad, the rail SHALL host a small world map plus a ranked list
   of visitor counts by country, sourced from a Cloudflare Worker
   (`deploy/visitor-stats-worker.js`) configured via `src/config.js`
@@ -90,6 +91,28 @@ content: everything the user writes stays in their browser or on their own disk.
 - FR-21 On screens narrower than 900 px the rail SHALL drop below the studio
   instead of compressing it.
 
+### 2.6 Written content
+
+Added September 2026. The site is not only a tool: an AdSense review of the
+domain returned *Low value content* while the studio page carried 53 crawlable
+words, everything on it being drawn by React after load.
+
+- FR-22 The studio page SHALL carry substantive prose in the served HTML,
+  outside the React root, readable without executing JavaScript. It SHALL be
+  ordinary visible content — not hidden, clipped, or positioned off-screen.
+- FR-23 The repository SHALL hold a set of written guides on system-prompt
+  engineering as static HTML under `guides/<slug>/index.html`, with an index at
+  `guides/index.html`, sharing one stylesheet.
+- FR-24 The build SHALL discover guide pages automatically, so that adding one
+  requires creating a directory and nothing else.
+- FR-25 Every guide SHALL carry a title, a byline, a canonical URL, a meta
+  description, and footer links to the studio, the guides index, and the site's
+  About, Contact and Privacy pages.
+- FR-26 Guides SHALL be written in first person from the author's own
+  experience, SHALL state where a technique stops working, and SHALL NOT contain
+  invented statistics. Where no figure is known the text SHALL say so rather
+  than supply one.
+
 ## 3. Non-functional requirements
 
 - NFR-1 Pure static site: `npm run build` SHALL emit a self-contained `dist/`
@@ -97,9 +120,12 @@ content: everything the user writes stays in their browser or on their own disk.
   environment variables.
 - NFR-2 All asset URLs SHALL be relative (`vite base "./"`), so the identical
   build works at `oursharedcode.github.io/prompt-engineering-studio/` and at
-  `www.oursharedcode.com/prompt-engineering-studio/`.
-- NFR-3 Low maintenance: the page is rarely edited; the only routinely edited
-  file is `src/config.js`. Dependencies are limited to React + Vite.
+  `www.oursharedcode.com/prompt-engineering-studio/`. This SHALL hold for the
+  guide pages too, which sit one and two directories deeper than the studio.
+- NFR-3 Low maintenance: the app is rarely edited; the only routinely edited
+  file is `src/config.js`. Dependencies are limited to React + Vite. Written
+  content is the exception — guides are expected to be added over time, and
+  doing so SHALL not require touching the build configuration.
 - NFR-4 Three visual themes (black / white / grey) SHALL be switchable in-app.
 - NFR-5 Works in current Chrome, Edge, and Firefox; save falls back gracefully
   where the File System Access API is unavailable.
@@ -111,3 +137,7 @@ content: everything the user writes stays in their browser or on their own disk.
 - Agent Skills (SKILL.md templates, skill zip export, Bitbucket skill
   browser/import) — removed.
 - Any backend, authentication, analytics of prompt content, or database.
+- **Translating the guides.** Machine-translated bulk falls under Google's
+  scaled-content-abuse policy and would flatten the voice FR-26 requires. If
+  anything on the domain is ever translated it is the site's About page, into
+  the same locales as the books, reviewed by a human.

@@ -27,6 +27,9 @@ See [REQUIREMENTS.md](./REQUIREMENTS.md) for the full requirement set.
   ready-made prompts; three themes (black / white / grey).
 - Right rail: Google AdSense unit (top) and a live world map of visitors with
   per-country counts (bottom) — both optional and configured in one file.
+- **Static prose under the app** and **six written guides** at
+  [`/guides/`](./guides/) — see *Written content* below. These are plain HTML,
+  not React, and are the reason the site is more than a tool.
 
 ## Local development
 
@@ -42,6 +45,55 @@ preview) rather than left on Vite's defaults, which other projects on this
 machine use. They are `strictPort`, so a clash fails loudly — a silently
 drifted port would not be in the visitor-counter Worker's CORS allowlist and
 the map would come up blank. Change a port in both places or dev breaks.
+
+## Written content
+
+Two pieces of the site are hand-written HTML rather than React, added in
+September 2026 after AdSense reviewed the domain and returned *Low value
+content*. The studio page had 53 crawlable words at the time — everything on it
+was drawn by React after load, so a reviewer or a crawler that does not run
+JavaScript saw an empty `<div>`.
+
+**1. Prose under the app.** [`index.html`](./index.html) carries ~730 words
+below `<div id="root">`: what the studio is for, which of the twelve blocks
+actually change an answer, how the health score is weighted, what the page
+deliberately does not do. React owns `#root` and nothing else, so this survives
+every render with no wrapper and no portal. It is ordinary visible content —
+scroll past the studio and you read it — not hidden text propped up for a
+crawler. Its styling lives in [`src/page-notes.css`](./src/page-notes.css).
+
+**2. Six guides** under [`guides/`](./guides/), ~8,000 words, on writing system
+prompts. Each is a self-contained `guides/<slug>/index.html` sharing
+[`guides/guide.css`](./guides/guide.css), with [`guides/index.html`](./guides/index.html)
+listing them. They are live at
+`https://www.oursharedcode.com/prompt-engineering-studio/guides/`.
+
+### Adding a guide
+
+Create `guides/<slug>/index.html`, copy the head and footer of an existing one,
+and build. **That is the whole procedure** — [`vite.config.js`](./vite.config.js)
+discovers every `guides/*/index.html` with a `readdir` and registers it as a
+build entry, so there is no list to keep in sync.
+
+Two build traps are worth knowing before you move these files, because both cost
+an hour and neither error message points at the real cause:
+
+- **Do not put the HTML in `public/`.** Vite 5 picks up `.html` under
+  `publicDir` as extra input and the build then fails to resolve the inline
+  `<style>` of the real `index.html`, reporting
+  `No matching HTML proxy module found` against `index.html` with no mention of
+  `public/` at all.
+- **Do not use inline `<style>` blocks in any page.** With several HTML entries
+  the `vite:html-inline-proxy` plugin intermittently fails to resolve one, which
+  is why a single guide built fine and six did not. Both stylesheets are linked
+  files for this reason; keep them that way.
+
+Guides are also written to a house style, which matters more than it sounds:
+first person, an opening that names a specific failure, an honest account of
+where each technique stops working, and no invented statistics. Guide 1 argues
+with the studio page about negations and then resolves the contradiction rather
+than quietly dropping one side. Match that or the set stops reading as one
+person's work.
 
 ## One-file site configuration
 
@@ -68,6 +120,14 @@ Until these are filled in, the page shows neutral placeholders in both spots.
 > in the root repo. Note the rail needs **both** `adsenseClient` and
 > `adsenseSlot` before it renders an ad; the slot ID comes from an ad unit
 > created in the dashboard once the site is approved.
+>
+> **Approval status (8 September 2026): not approved.** The first review came
+> back *Low value content* on 7 September. The domain has since grown from 4
+> pages and ~4,300 crawlable words to 13 pages and ~13,300, most of it the
+> guides in this repo. A re-review has **not** been requested yet — the plan is
+> to wait until Google Search Console shows the guides indexed, then request it
+> from AdSense → Sites. Until approval lands, `adsenseClient` and `adsenseSlot`
+> stay empty and no ad code runs anywhere on the domain.
 
 ## Visitor counter
 
