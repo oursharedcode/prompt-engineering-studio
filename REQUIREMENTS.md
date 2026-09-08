@@ -88,6 +88,13 @@ content: everything the user writes stays in their browser or on their own disk.
 - FR-20a The counter SHALL derive country from Cloudflare's request geo header,
   SHALL count a visitor at most once per 12 hours, and SHALL NOT store IP
   addresses — only a salted, dated hash used for that deduplication.
+- FR-20b The rail SHALL NOT display the visitor total, the country count, or
+  the ranked country list until the total reaches `REVEAL_AT` (250) in
+  `src/VisitorMap.jsx`. Below that figure the shaded map and a plain
+  "VISITORS BY COUNTRY" label SHALL appear in their place, and counting SHALL
+  continue unchanged so the tally keeps building while the figures are hidden.
+  Rationale: the page was rejected for *Low value content* while the rail
+  published a two-digit visitor count, most of it the author's own testing.
 - FR-21 On screens narrower than 900 px the rail SHALL drop below the studio
   instead of compressing it.
 

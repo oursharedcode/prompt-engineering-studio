@@ -126,8 +126,10 @@ Until these are filled in, the page shows neutral placeholders in both spots.
 > pages and ~4,300 crawlable words to 13 pages and ~13,300, most of it the
 > guides in this repo. A re-review has **not** been requested yet — the plan is
 > to wait until Google Search Console shows the guides indexed, then request it
-> from AdSense → Sites. Until approval lands, `adsenseClient` and `adsenseSlot`
-> stay empty and no ad code runs anywhere on the domain.
+> from AdSense → Sites. As part of preparing for that re-review the studio
+> page's visitor tally is now hidden below 250 — see *Visitor counter* below.
+> Until approval lands, `adsenseClient` and `adsenseSlot` stay empty and no ad
+> code runs anywhere on the domain.
 
 ## Visitor counter
 
@@ -152,6 +154,13 @@ deployed Worker URL (no trailing slash).
 
 Notes:
 
+- **Small tallies stay hidden.** Below `REVEAL_AT` (250) in
+  [`src/VisitorMap.jsx`](./src/VisitorMap.jsx) the rail shows the shaded map
+  and a plain "VISITORS BY COUNTRY" label; the total, the country count and the
+  ranked list appear only once the total passes it. Counting is unaffected, so
+  the figures return on their own. This exists because the page was carrying
+  "11 VISITORS" — eight of them the author reloading the site — on the one
+  page Google had just rejected for *Low value content*.
 - **No IP is ever stored.** Deduplication uses a salted SHA-256 of IP + user
   agent + date, kept for 12 hours, so one visitor counts once per half-day.
 - **Counts are approximate.** KV has no atomic increment and throttles to one
