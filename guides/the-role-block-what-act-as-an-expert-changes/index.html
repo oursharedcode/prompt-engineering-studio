@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Role block: what "act as an expert" actually changes</title>
+    <meta
+      name="description"
+      content="A persona line changes the register and the vocabulary of an answer and not much else. What the Role block is good for, what the years-of-experience clause does, why the studio still scores it highly, and how I write one now."
+    />
+    <link rel="canonical" href="https://www.oursharedcode.com/prompt-engineering-studio/guides/the-role-block-what-act-as-an-expert-changes/" />
+    <link rel="stylesheet" href="../guide.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>"
+    />
+  </head>
+  <body>
+    <p class="crumb">
+      <a href="https://www.oursharedcode.com/">OurSharedCode</a> &rsaquo;
+      <a href="../../">Prompt Engineering Studio</a> &rsaquo;
+      <a href="../">Guides</a>
+    </p>
+
+    <h1>The Role block: what "act as an expert" actually changes</h1>
+    <p class="byline">By Mark &middot; 10 September 2026</p>
+
+    <p>
+      The first system prompt I wrote for anything real started with <em>You
+      are a senior tax adviser with twenty years of experience</em>. I was
+      trying to work out whether a small company I was helping had to register
+      for VAT, and I copied the opening from a prompt I had seen on a forum. The
+      answer came back in the voice of someone who had been doing this for
+      twenty years. It also gave me the wrong registration threshold, a figure
+      that had been out of date for a couple of years, and it gave it without a
+      flicker of doubt.
+    </p>
+
+    <p>
+      I have thought about that line a lot since, because it is the most copied
+      line in prompting and I have never seen anyone explain what it is for.
+      "It primes the model's expertise" is the usual answer. I do not think
+      that sentence means anything. Here is what I can actually show the Role
+      block doing, and what I have stopped expecting from it.
+    </p>
+
+    <h2>What a role reliably changes</h2>
+
+    <p>
+      Two things. Both are about how the answer reads, not about whether it is
+      right.
+    </p>
+
+    <ul>
+      <li>
+        <strong>Register.</strong> Tell the model it is a paediatric nurse and
+        it talks to you as if you were a parent. Tell it it is a consultant and
+        it talks to you as a colleague. Sentence length changes, the amount of
+        hedging changes, how much it explains and how much it assumes you
+        already know changes. I have seen this hold across every model I have
+        used.
+      </li>
+      <li>
+        <strong>Vocabulary.</strong> The role decides which words come out.
+        Ask about a rash as "a dermatologist" and you get <em>erythematous</em>
+        and <em>papular</em>. Ask as "a school nurse" and you get <em>red</em>
+        and <em>bumpy</em>. The information underneath is the same. If your
+        reader needs one set of words and would be lost by the other, the role
+        is the quickest way to get the right set.
+      </li>
+    </ul>
+
+    <p>
+      That is the list. The role chooses a voice from the ones the model
+      already has. It cannot add to what the model knows, because that was
+      fixed before your prompt arrived, and it does not make the model check
+      anything, because "you are an expert" does not describe a check.
+    </p>
+
+    <h2>What it does not change</h2>
+
+    <p>
+      Accuracy, as far as I can tell. I have run the same set of factual
+      questions with a role and without one, more times than was sensible, and
+      I could not find a consistent difference. Some runs the persona did
+      better. Some runs it did worse, and when it did worse it was usually
+      because it guessed with the same confidence it used for the things it
+      knew. The papers I have read on persona prompting do not agree with each
+      other either, which is roughly what you would expect if the effect is
+      small and depends on the task. I would not build anything on it.
+    </p>
+
+    <p>
+      Then there is the clause with the years in it. <em>With fifteen years of
+      experience.</em> There is no mechanism for this. The model has nothing
+      that corresponds to years, and a claim it cannot check it cannot act on.
+      I have tried five, fifteen and forty in the same prompt and read the
+      answers side by side, and I could not tell them apart. The clause is
+      still in the studio's Role template. I have left it there because people
+      expect it, and when I took it out of an early version the first piece of
+      feedback I got was that the template looked unfinished.
+    </p>
+
+    <p>
+      A role also does not hold up when another block disagrees with it. If the
+      Role says <em>you are a cautious legal adviser</em> and the Task says
+      <em>give a definite yes or no</em>, you have written a contradiction, and
+      the model resolves it without telling you. In my experience the Task
+      usually gets its way. I wrote about this in
+      <a href="../why-your-system-prompt-gets-ignored/">why your system prompt
+      gets ignored</a>, and when I go looking for the instruction that lost,
+      it is often the one in the Role block.
+    </p>
+
+    <h2>Where the studio disagrees with me</h2>
+
+    <p>
+      Anyone who opens the studio will notice this, so I would rather say it
+      here. The prompt-health score gives Role twenty points, the same as Task
+      and more than any other block, and the tooltip on the block says a
+      persona "improves accuracy". I have just spent two sections saying it
+      does not.
+    </p>
+
+    <p>
+      The score and the tooltip are talking about different things, and only
+      one of them is defensible. The twenty points are there because a prompt
+      with no role in it nearly always has no reader in it either, and a prompt
+      with no reader produces an answer aimed at nobody in particular. The
+      block is standing in for the question "have you decided who this is
+      for?" I still think that is worth twenty points. The tooltip's line
+      about accuracy is a claim I cannot support, and I will change the
+      tooltip rather than leave the two contradicting each other.
+    </p>
+
+    <h2>How I write the block now</h2>
+
+    <p>
+      If the block only sets register and vocabulary, then write it to set
+      register and vocabulary and leave the rest out. The VAT prompt I started
+      with:
+    </p>
+
+    <pre><code>You are a senior tax adviser with twenty years of experience.
+Your approach is thorough and professional.</code></pre>
+
+    <p>
+      The second sentence contains no instruction. <em>Thorough</em> does not
+      say how long the answer should be. <em>Professional</em> does not say who
+      it is for. What I needed, it turned out, was this:
+    </p>
+
+    <pre><code>You are a tax adviser writing for the owner of a small business who
+has never dealt with VAT. Use plain words. Where a technical term
+is unavoidable, give it once in brackets after the plain one.
+They have about five minutes.</code></pre>
+
+    <p>
+      The years are gone and I did not miss them. What replaced them is a
+      reader, a rule about words, and a rough length, and I can point at each
+      of those in the answer that comes back. It is still a Role block. It has
+      just become a description of the reader rather than a description of the
+      author, and I think that is what the block was for all along.
+    </p>
+
+    <p>Three habits I have picked up from doing this:</p>
+
+    <ul>
+      <li>
+        <strong>Name the reader before the persona.</strong> "A nurse
+        explaining to a worried parent" does more than "a nurse", and if there
+        is only room for one half, keep the parent.
+      </li>
+      <li>
+        <strong>Put behaviour in Constraints, not in the role.</strong> "You
+        are careful" is a hope. "Do not give a deadline without naming the tax
+        year it applies to" is an instruction, and the Constraints block exists
+        for instructions.
+      </li>
+      <li>
+        <strong>Cut any adjective you could not check.</strong> If you could
+        not read an answer and say whether it was "insightful", the word is not
+        doing anything. Applied honestly this removes most of the second
+        sentence of most role blocks, including the ones I wrote before I
+        started doing it.
+      </li>
+    </ul>
+
+    <h2>When to leave it out</h2>
+
+    <p>
+      Extraction, reformatting, classification into fixed labels. Anything
+      where there is no reader, only a program waiting to parse the output. A
+      persona on those jobs costs a little on every call and now and then
+      produces a sentence of unwanted introduction, because a persona is
+      inclined to talk.
+    </p>
+
+    <p>
+      One thing I should own up to. The
+      <a href="../a-system-prompt-you-can-steal/">triage prompt I took apart
+      line by line</a> has a role block that says <em>you are precise and you
+      do not speculate</em>, and I have just told you to cut adjectives like
+      that. I kept it there because a constraint lower down forbids guessing,
+      so "precise" is naming a rule that actually exists in the prompt rather
+      than hoping for one. I think that is a fair distinction. I also think it
+      is the kind of distinction that lets you keep every adjective you are
+      fond of, so I try to apply it to one word per prompt at most.
+    </p>
+
+    <p>
+      So, the most quoted line in prompting: it chooses the voice, it chooses
+      the words, and if you write it as a reader rather than a CV it does one
+      more useful thing. Ask it for anything beyond that and you are back to
+      the twenty years, which did not stop the wrong threshold and would not
+      have stopped the next one.
+    </p>
+
+    <footer>
+      <p>
+        The <a href="../../">Prompt Engineering Studio</a> scores the Role
+        block at twenty points. This article is why I think that is right even
+        though the block's tooltip is not.
+      </p>
+      <p>
+        Next:
+        <a href="../system-prompt-or-user-message/">system prompt or user
+        message: what belongs where</a> &middot; <a href="../">All guides</a>
+        &middot; <a href="https://www.oursharedcode.com/">OurSharedCode</a>
+        &middot; <a href="https://www.oursharedcode.com/about/">About</a>
+        &middot; <a href="https://www.oursharedcode.com/contact/">Contact</a>
+      </p>
+    </footer>
+  </body>
+</html>

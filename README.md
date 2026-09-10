@@ -27,7 +27,7 @@ See [REQUIREMENTS.md](./REQUIREMENTS.md) for the full requirement set.
   ready-made prompts; three themes (black / white / grey).
 - Right rail: Google AdSense unit (top) and a live world map of visitors with
   per-country counts (bottom) — both optional and configured in one file.
-- **Static prose under the app** and **six written guides** at
+- **Static prose under the app** and **ten written guides** at
   [`/guides/`](./guides/) — see *Written content* below. These are plain HTML,
   not React, and are the reason the site is more than a tool.
 
@@ -62,7 +62,7 @@ every render with no wrapper and no portal. It is ordinary visible content —
 scroll past the studio and you read it — not hidden text propped up for a
 crawler. Its styling lives in [`src/page-notes.css`](./src/page-notes.css).
 
-**2. Six guides** under [`guides/`](./guides/), ~8,000 words, on writing system
+**2. Ten guides** under [`guides/`](./guides/), ~14,000 words, on writing system
 prompts. Each is a self-contained `guides/<slug>/index.html` sharing
 [`guides/guide.css`](./guides/guide.css), with [`guides/index.html`](./guides/index.html)
 listing them. They are live at

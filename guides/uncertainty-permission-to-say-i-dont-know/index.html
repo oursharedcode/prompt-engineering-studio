@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Uncertainty: giving the model permission to say "I don't know"</title>
+    <meta
+      name="description"
+      content="A model answers from memory the way a confident colleague does, including when the memory is wrong. What one line of permission changes, what it cannot, why stated confidence levels are weaker than they look, and four ways to make uncertainty something you can check."
+    />
+    <link rel="canonical" href="https://www.oursharedcode.com/prompt-engineering-studio/guides/uncertainty-permission-to-say-i-dont-know/" />
+    <link rel="stylesheet" href="../guide.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>"
+    />
+  </head>
+  <body>
+    <p class="crumb">
+      <a href="https://www.oursharedcode.com/">OurSharedCode</a> &rsaquo;
+      <a href="../../">Prompt Engineering Studio</a> &rsaquo;
+      <a href="../">Guides</a>
+    </p>
+
+    <h1>Uncertainty: giving the model permission to say "I don't know"</h1>
+    <p class="byline">By Mark &middot; 10 September 2026</p>
+
+    <p>
+      I once asked a model which paper first described a technique I was
+      using, because I wanted to cite it properly. It gave me two authors, a
+      year, a journal and a title. The title was good. It sounded exactly like
+      the paper that should exist. I spent twenty minutes looking for it before
+      I accepted that it did not, and that the model had built me a citation
+      out of the shape of citations rather than out of one it remembered.
+    </p>
+
+    <p>
+      What bothered me afterwards was not the mistake. It was that nothing in
+      the answer marked it as a guess. The invented paper arrived in the same
+      tone as the real things around it. That is the problem the Uncertainty
+      block in the studio exists for, and this is an honest account of how
+      much of it the block solves.
+    </p>
+
+    <h2>What one line of permission does</h2>
+
+    <p>
+      The studio's template says: <em>if you are uncertain about any part of
+      your answer, explicitly state your confidence level and say "I don't
+      know" rather than guessing.</em> I have had some version of that line in
+      most prompts for two years, and it does something real. A model that has
+      been told helpfulness is the job will treat "I'm not sure" as a failure
+      to do the job, and it will reach for the plausible answer instead. Tell
+      it plainly that not knowing is an acceptable outcome and it admits
+      uncertainty more often. I cannot give you a rate. I can tell you that in
+      prompts without the line I almost never see an admission, and in prompts
+      with it I see them regularly.
+    </p>
+
+    <p>
+      That is the whole of what the line does, though, and it is worth being
+      exact about it. The permission changes the cost of admitting doubt. It
+      does not change what the model knows, and it does not give the model a
+      better sense of which of its memories are reliable. The citation came
+      from a prompt that had the line in it. The model did not doubt the
+      paper, so there was nothing for the permission to act on.
+    </p>
+
+    <p>
+      So the line catches one class of error: the cases where the model has
+      some signal it is on thin ice and, without permission, would have hidden
+      that signal. It leaves the other class alone: the cases where it is
+      confidently wrong. Everything below is about widening the first class
+      and stopping the second from hurting you as much.
+    </p>
+
+    <h2>The confidence level is weaker than it looks</h2>
+
+    <p>
+      "State your confidence level" is in the template because it reads as
+      rigorous. Ask for a percentage and you will get one, and it will look
+      like measurement. I stopped trusting the numbers after I started keeping
+      them next to what turned out to be true. I never had enough cases to put
+      a figure on it, so I will not. What I could see without a figure was
+      that the number moved with how I phrased the question more than with
+      anything about the answer, and that "ninety per cent" was attached to
+      things that were plainly wrong often enough to stop meaning anything to
+      me. The research I have read on this is mixed. I no longer ask for a
+      percentage.
+    </p>
+
+    <p>
+      What I ask for instead is a label from a short list, because a label is
+      something my code can act on and a percentage is something I would have
+      to bin anyway. Three values are enough: <em>known</em>, <em>likely</em>,
+      <em>unverified</em>. The words matter less than there being three of
+      them and the model having to pick one. The middle one exists because
+      without it everything gets sorted into the top.
+    </p>
+
+    <h2>Making uncertainty something you can check</h2>
+
+    <p>
+      The permission line treats uncertainty as a mood the model may or may
+      not be in. What has worked better for me is to build it into the shape
+      of the answer, so that a guess has to look different from a fact on the
+      page. Four moves, roughly in order of how often I use them.
+    </p>
+
+    <p>
+      <strong>1. Separate memory from inference.</strong> Ask for two labelled
+      parts: what the model is recalling, and what it is working out from that.
+      The second part is usually fine, because reasoning from stated premises
+      is something models do well. The first part is where the invented paper
+      lives, and having it in its own section means I read that section
+      differently.
+    </p>
+
+    <p>
+      <strong>2. Mark the claims, not the answer.</strong> One confidence label
+      for a whole reply is nearly useless, because a reply with six facts in it
+      has six different confidences. I ask for a prefix on each claim that
+      the model cannot stand behind:
+    </p>
+
+    <pre><code>Prefix any specific fact you are not certain of with UNVERIFIED:
+on its own line. Names, dates, version numbers, figures and
+citations are the usual cases. An answer with several UNVERIFIED
+lines is a good answer. An answer that hides a guess is not.</code></pre>
+
+    <p>
+      This is the same idea as the fixed <code>NOT IN SOURCE</code> string in
+      the <a href="../grounding-stop-a-model-inventing-facts/">grounding
+      article</a>, moved to the case where there is no source. A single
+      literal token is something a program can find, and a program that finds
+      it can hold that claim back or send it to a person. "Say you're not
+      sure" gives you twelve phrasings and nothing to match on.
+    </p>
+
+    <p>
+      <strong>3. Ask for the handle you would check against.</strong> For any
+      specific fact, ask what you would look at to confirm it: the document
+      name, the page, the search you would run. A claim that comes with a
+      handle is easier to check, and a claim the model cannot attach a handle
+      to is often the one it made up. I should say clearly that this is not
+      proof. The model can invent the handle too, and a fabricated URL looks
+      as real as a fabricated title. It makes checking faster. It does not
+      replace it.
+    </p>
+
+    <p>
+      <strong>4. Split the general from the specific.</strong> Models are
+      good at the shape of things and bad at the particulars. Ask how a
+      process works and the answer is usually right. Ask for the exact
+      number, date, name or clause and the odds drop a long way. So when a
+      question has both parts, I ask for both parts separately and I plan to
+      verify the specific one myself. The general half saves me time. The
+      specific half is where I would have lost it.
+    </p>
+
+    <h2>Where all of this stops working</h2>
+
+    <p>
+      None of the four moves catches a confident error. That deserves its own
+      paragraph, because it is easy to read a list like the one above and
+      come away thinking the problem is handled. It is not. A model that is
+      wrong and does not know it will write <em>known</em> next to the wrong
+      thing, and no prompt can fix that, because the prompt can only work with
+      signals the model has.
+    </p>
+
+    <p>
+      For those cases the answer is outside the prompt. Either give the model
+      a source and confine it to that, which is what grounding is, or check the
+      answer against something that is not the model, which is what I should
+      have done with the citation in the first minute rather than the
+      twentieth. The uncertainty block reduces how often you need to do that.
+      It does not make it optional.
+    </p>
+
+    <h2>What the studio says, and where I disagree with it</h2>
+
+    <p>
+      The prose under the studio says Grounding and Uncertainty do the most
+      work of the twelve blocks. I wrote that and I still think it. The
+      health score, which I also wrote, gives Uncertainty ten points, less
+      than Role's twenty and Grounding's fifteen. Those two things do not
+      agree, and I would rather point at the disagreement than smooth it
+      over.
+    </p>
+
+    <p>
+      The score is counting whether a block is present, and presence is a
+      poor measure of this one. A prompt can have an Uncertainty block that
+      says "be honest about what you don't know" and get the ten points while
+      doing nothing, because that phrasing has no defined outcome. The
+      version with the <code>UNVERIFIED</code> prefix gets the same ten. The
+      score cannot tell them apart. I explained the same limitation about the
+      Role block <a href="../the-role-block-what-act-as-an-expert-changes/">in
+      its own article</a>. I have not decided whether the fix is to rebalance
+      the points or to stop pretending a presence check can measure quality.
+      For now, the honest position is that the ten points mean you remembered
+      the block, not that it works.
+    </p>
+
+    <h2>Before and after</h2>
+
+    <p>The question that produced the citation, with the prompt I had:</p>
+
+    <pre><code>If you are uncertain about any part of your answer, explicitly
+state your confidence level and say "I don't know" rather than
+guessing.
+
+Which paper first described [TECHNIQUE]?</code></pre>
+
+    <p>The version I use now:</p>
+
+    <pre><code>Answer in two parts. First, what you recall: give the answer
+and prefix any specific name, year or title you are not certain
+of with UNVERIFIED: on its own line. Second, what you infer from
+that recall, kept separate. If you have no reliable recollection,
+say NO RELIABLE RECOLLECTION and stop; that is a correct answer.
+For anything you do state, name what I would search to confirm it.
+
+Which paper first described [TECHNIQUE]?</code></pre>
+
+    <p>
+      With the second prompt the same question sometimes gets me a real
+      paper, sometimes an <code>UNVERIFIED</code> line in front of a title I
+      then check, and sometimes the stop string. I have not counted which
+      happens how often and I would not trust the count if I had, because the
+      questions I ask are not a fair sample of anything. What I can say is
+      that a guess and a fact no longer arrive looking the same, and I have
+      not lost twenty minutes to a paper that does not exist since.
+    </p>
+
+    <footer>
+      <p>
+        The <a href="../../">Prompt Engineering Studio</a> scores the
+        Uncertainty block at ten points for being present. This article is
+        about the difference between present and working.
+      </p>
+      <p>
+        Next:
+        <a href="../testing-a-system-prompt-twelve-cases/">testing a system
+        prompt: a twelve-case regression set</a> &middot;
+        <a href="../">All guides</a> &middot;
+        <a href="https://www.oursharedcode.com/">OurSharedCode</a> &middot;
+        <a href="https://www.oursharedcode.com/about/">About</a> &middot;
+        <a href="https://www.oursharedcode.com/contact/">Contact</a>
+      </p>
+    </footer>
+  </body>
+</html>

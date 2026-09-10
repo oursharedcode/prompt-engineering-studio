@@ -6,7 +6,7 @@
     <title>Prompt engineering guides</title>
     <meta
       name="description"
-      content="Six written guides on system prompts: why instructions get ignored, grounding against invented facts, choosing few-shot examples, when chain-of-thought is worth its cost, output formats a program can parse, and one complete annotated prompt."
+      content="Ten written guides on system prompts: why instructions get ignored, grounding, few-shot examples, chain-of-thought, output formats, one complete annotated prompt, the Role block, system prompt versus user message, uncertainty, and a twelve-case regression set."
     />
     <link rel="canonical" href="https://www.oursharedcode.com/prompt-engineering-studio/guides/" />
     <link rel="stylesheet" href="./guide.css" />
@@ -22,7 +22,7 @@
     </p>
 
     <h1>Guides</h1>
-    <p class="byline">Written by Mark &middot; six pieces, September 2026</p>
+    <p class="byline">Written by Mark &middot; ten pieces, September 2026</p>
 
     <p>
       These are the things I worked out while building the
@@ -111,6 +111,62 @@
         One complete working prompt for support-ticket triage, built a block at a
         time with the reason for every line — including the four techniques left
         out on purpose, which is the part most worth copying.
+      </p>
+    </div>
+
+    <div class="entry">
+      <h2>
+        <a href="./the-role-block-what-act-as-an-expert-changes/"
+          >The Role block: what "act as an expert" actually changes</a
+        >
+      </h2>
+      <p>
+        A persona sets the register and the vocabulary of an answer and not
+        much else. Why the years-of-experience clause does nothing, why the
+        studio still scores the block at twenty points, and the version of it
+        that describes the reader instead of the author.
+      </p>
+    </div>
+
+    <div class="entry">
+      <h2>
+        <a href="./system-prompt-or-user-message/"
+          >System prompt or user message: what belongs where</a
+        >
+      </h2>
+      <p>
+        The system prompt is what you would edit for a release; the user
+        message is what you would edit for a request. Where dates, pasted
+        documents, examples and the format reminder go, and why the system
+        prompt is neither a stronger instruction nor a security boundary.
+      </p>
+    </div>
+
+    <div class="entry">
+      <h2>
+        <a href="./uncertainty-permission-to-say-i-dont-know/"
+          >Uncertainty: giving the model permission to say "I don't know"</a
+        >
+      </h2>
+      <p>
+        One line of permission changes the cost of admitting doubt and nothing
+        about what the model knows. Why stated confidence levels are weaker
+        than they look, four ways to make a guess look different from a fact on
+        the page, and the class of error none of them catches.
+      </p>
+    </div>
+
+    <div class="entry">
+      <h2>
+        <a href="./testing-a-system-prompt-twelve-cases/"
+          >Testing a system prompt: a twelve-case regression set</a
+        >
+      </h2>
+      <p>
+        Every edit fixes one thing and may quietly break another. Twelve saved
+        inputs with yes-or-no checks instead of golden outputs, run before and
+        after each change. What goes in the twelve, how to write a check, and
+        what the set will never tell you.
       </p>
     </div>
 

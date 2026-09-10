@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Testing a system prompt: a twelve-case regression set</title>
+    <meta
+      name="description"
+      content="Every edit to a system prompt fixes one thing and may quietly break another. Twelve saved inputs with checks instead of golden outputs, run before and after each change, are enough to catch most of it. What goes in the twelve, how to write a check, and what the set will never tell you."
+    />
+    <link rel="canonical" href="https://www.oursharedcode.com/prompt-engineering-studio/guides/testing-a-system-prompt-twelve-cases/" />
+    <link rel="stylesheet" href="../guide.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>"
+    />
+  </head>
+  <body>
+    <p class="crumb">
+      <a href="https://www.oursharedcode.com/">OurSharedCode</a> &rsaquo;
+      <a href="../../">Prompt Engineering Studio</a> &rsaquo;
+      <a href="../">Guides</a>
+    </p>
+
+    <h1>Testing a system prompt: a twelve-case regression set</h1>
+    <p class="byline">By Mark &middot; 10 September 2026</p>
+
+    <p>
+      The triage prompt I
+      <a href="../a-system-prompt-you-can-steal/">took apart line by line</a>
+      went through eleven versions before the one on that page. Somewhere
+      around version seven I added a constraint about quoted reply chains,
+      because a ticket with four levels of quoting had been classified on the
+      oldest message instead of the newest. The fix worked. About a week later
+      I noticed that very short tickets, two lines with no greeting, had
+      started coming back as "other" when they used to get a proper category.
+      I could not tell you which version had done it, because I had not kept
+      the old ones, and I could not tell you for certain that the old
+      behaviour had been better, because I was going on memory.
+    </p>
+
+    <p>
+      That is the failure this article is about. Not a prompt that is wrong,
+      but a prompt that was right last week and you cannot prove it. The fix
+      is dull and it is the same fix as for code: keep a small set of inputs,
+      decide in advance what a good answer to each one has to satisfy, and run
+      the set before and after every change. I use twelve. That number is not
+      a finding. It is what I can run by hand and still read every output.
+    </p>
+
+    <h2>What goes in the twelve</h2>
+
+    <p>
+      The mix matters more than the count. If all twelve are ordinary inputs
+      the set will pass every version, including the broken ones, because
+      ordinary inputs are the ones any version handles. Mine are roughly:
+    </p>
+
+    <ul>
+      <li>
+        <strong>Three typical cases.</strong> The bread and butter. They are
+        there so that a change which breaks the common path is caught first,
+        not so that they teach you anything.
+      </li>
+      <li>
+        <strong>Three awkward ones.</strong> Inputs where the right answer is
+        arguable, or where the honest answer is "unclear". These are the
+        cases the uncertainty path is supposed to fire on, and they are the
+        ones that regress when someone tightens a constraint. The
+        <a href="../few-shot-examples-that-work/">few-shot article</a> makes
+        the same argument about examples, and the reasoning is the same. The
+        awkward cases are where the prompt is actually being tested.
+      </li>
+      <li>
+        <strong>Two that broke before.</strong> Every time the prompt fails in
+        use, the input goes in the set. The four-level quoted chain is case
+        eight. The two-line ticket is case nine. This is how the set earns its
+        keep over time: it becomes a record of what has gone wrong.
+      </li>
+      <li>
+        <strong>Two hostile or odd inputs.</strong> An empty message. A very
+        long one. One that contains an instruction aimed at the model, the
+        "ignore previous instructions" kind. I do not expect the prompt to be
+        secure against that, and I said why in
+        <a href="../system-prompt-or-user-message/">system prompt or user
+        message</a>. I do expect to know what it does.
+      </li>
+      <li>
+        <strong>Two format edges.</strong> Whatever your output format
+        struggles with: a case where a list should be empty, a case with
+        quotation marks and line breaks in the input that will end up inside
+        a JSON string. The
+        <a href="../output-formats-a-program-can-parse/">output formats
+        article</a> lists what a parser has to cope with, and each of those is
+        a candidate.
+      </li>
+    </ul>
+
+    <p>
+      One rule I keep: the test cases are not the few-shot examples in the
+      prompt. If an input is in the prompt as an example, the model has seen
+      the answer and passing it proves nothing. I had two cases that were
+      also examples for a while and they passed every version, including
+      version seven, which is exactly the problem.
+    </p>
+
+    <h2>Write checks, not golden outputs</h2>
+
+    <p>
+      My first attempt at this saved the output I liked for each case and
+      compared new outputs against it. That lasted one afternoon. Models do
+      not return the same words twice, so every run was a diff, and I was back
+      to reading everything and deciding by feel, which is what I had been
+      doing before.
+    </p>
+
+    <p>
+      What works is to write down, for each case, the properties a good answer
+      must have, and only those. For the two-line ticket:
+    </p>
+
+    <pre><code>CASE 9: short ticket, no greeting
+INPUT:
+  Export to CSV gives a 500 error since this morning. Org id 4471.
+CHECKS:
+  parses as JSON
+  category is "technical"    (not "other")
+  urgency is "high"
+  quote is a sentence that appears verbatim in the input
+  no text outside the JSON</code></pre>
+
+    <p>
+      Every line under CHECKS is a yes or no. None of them cares how the note
+      is worded. When version seven made this case come back as "other", the
+      second check would have failed and I would have known that day instead
+      of a week later. And a check is something a short script can run, which
+      is where this goes once running twelve cases by hand gets old, though
+      I did it by hand for a couple of months first and it was fine.
+    </p>
+
+    <p>
+      Some checks cannot be reduced to a string match. "The summary does not
+      contain anything not in the source" is a real requirement and no regular
+      expression tests it. For those I have two options I trust and one I do
+      not. I can read the output myself, which is what the twelve-case limit
+      is for. I can require the model to quote, as the
+      <a href="../grounding-stop-a-model-inventing-facts/">grounding
+      article</a> describes, and check the quotes mechanically. The one I do
+      not trust is asking a second model to grade the first, because when I
+      tried it the grader agreed with the answer most of the time whether or
+      not the answer was right, and I could not tell whether that was the
+      grader being right or being agreeable.
+    </p>
+
+    <h2>Running it</h2>
+
+    <p>
+      Before the change and after the change, every time, including the
+      changes that are obviously safe. The one-word edits are the ones I have
+      never bothered testing and the ones that have bitten me. And once more
+      whenever the model changes underneath the prompt, because a prompt
+      tuned on one model is carrying assumptions about it, some of which I
+      wrote about in
+      <a href="../chain-of-thought-is-oversold/">chain-of-thought is
+      oversold</a>.
+    </p>
+
+    <p>
+      One run per case is not really enough. Outputs vary between runs, and
+      a borderline case can pass twice and fail the third time. I run the
+      awkward cases three times and the ordinary ones once, and I treat a
+      case that passes two out of three as a case I need to look at, not as a
+      pass. I do not have a principled number of runs. Three is what I could
+      afford to read.
+    </p>
+
+    <p>
+      Keep the prompt and the cases together, in version control if you use
+      it and in a dated folder if you do not. The studio's <code>.prompt</code>
+      export carries an export date and a word count, which is enough to tell
+      versions apart, but it does not carry the test set and it does not know
+      the test set exists. That is deliberate. The studio builds the prompt.
+      What the prompt has to survive is yours to write down.
+    </p>
+
+    <h2>Reading the results</h2>
+
+    <p>
+      The failure that matters is the one the change was not about. If I edit
+      the constraints for quoted chains and case eight now passes, good, that
+      was the point. If case nine also changed, that is the news, and it is
+      the thing I would never have looked at without the set, because I was
+      looking at case eight.
+    </p>
+
+    <p>
+      "The new output reads better" is not a pass. I have to say this to
+      myself regularly. A longer, more careful-sounding answer is very easy
+      to prefer, and the checks exist precisely so that my preference is not
+      the test. If a version reads better and fails a check, the check wins,
+      or I change the check on purpose and write down why.
+    </p>
+
+    <h2>What twelve cases will not tell you</h2>
+
+    <p>
+      They will not tell you the prompt is good. They tell you it has not got
+      worse on twelve inputs, which is a much smaller claim, and I try not to
+      let the green ticks make it feel bigger. A regression set is a floor.
+    </p>
+
+    <p>
+      They will not tell you about the inputs you did not think of, and the
+      set is built entirely out of what I thought of, plus what has already
+      failed. The awkward cases are the awkward cases I could imagine. Real
+      traffic has a longer imagination.
+    </p>
+
+    <p>
+      And they go stale. The product changes, the categories change, and a
+      check that was right in March is asserting something nobody wants by
+      September. I read through the whole set every time I add a case, which
+      is not often, and every time one of the checks has quietly become wrong.
+      Twelve is small enough that this takes ten minutes. That, more than
+      anything about the number itself, is why it is twelve.
+    </p>
+
+    <footer>
+      <p>
+        The <a href="../../">Prompt Engineering Studio</a> scores a prompt on
+        which blocks are present. It does not run it, and nothing on that page
+        can tell you whether last week's version was better. This is the
+        piece that is missing, and it is a text file.
+      </p>
+      <p>
+        Start again:
+        <a href="../why-your-system-prompt-gets-ignored/">why your system
+        prompt gets ignored</a> &middot; <a href="../">All guides</a> &middot;
+        <a href="https://www.oursharedcode.com/">OurSharedCode</a> &middot;
+        <a href="https://www.oursharedcode.com/about/">About</a> &middot;
+        <a href="https://www.oursharedcode.com/contact/">Contact</a>
+      </p>
+    </footer>
+  </body>
+</html>
