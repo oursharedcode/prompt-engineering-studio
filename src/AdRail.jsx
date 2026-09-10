@@ -97,20 +97,27 @@ function AdSenseUnit() {
   );
 }
 
+// The ad section exists only once both IDs are configured. Until then the rail
+// is the visitor map alone: an empty "Ad space" box with set-up instructions
+// looked like an unfinished site on the one page AdSense had just reviewed.
+const adsConfigured = Boolean(CONFIG.adsenseClient && CONFIG.adsenseSlot);
+
 export default function AdRail() {
   return (
     <aside style={railStyle}>
-      <div style={{ flex: "1 1 62%", display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <div style={labelStyle}>SPONSORED</div>
-        <AdSenseUnit />
-      </div>
+      {adsConfigured && (
+        <div style={{ flex: "1 1 62%", display: "flex", flexDirection: "column", minHeight: 0 }}>
+          <div style={labelStyle}>SPONSORED</div>
+          <AdSenseUnit />
+        </div>
+      )}
       <div
         style={{
-          flex: "1 1 38%",
+          flex: adsConfigured ? "1 1 38%" : "1 1 100%",
           display: "flex",
           flexDirection: "column",
           minHeight: 0,
-          borderTop: "1px solid #252D42",
+          borderTop: adsConfigured ? "1px solid #252D42" : "none",
         }}
       >
         <div style={labelStyle}>VISITORS AROUND THE WORLD</div>
